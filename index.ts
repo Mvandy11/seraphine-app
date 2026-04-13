@@ -1,2 +1,2 @@
-export * from './nope';
+export * from './typeschema';
 export * from './types';

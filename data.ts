@@ -1,33 +1,47 @@
-import Nope from 'nope-validator';
 import { Field, InternalFieldName } from 'react-hook-form';
+import { z } from 'zod';
 
-export const schema = Nope.object().shape({
-  username: Nope.string().regex(/^\w+$/).min(2).max(30).required(),
-  password: Nope.string()
-    .regex(new RegExp('.*[A-Z].*'), 'One uppercase character')
-    .regex(new RegExp('.*[a-z].*'), 'One lowercase character')
-    .regex(new RegExp('.*\\d.*'), 'One number')
-    .regex(
-      new RegExp('.*[`~<>?,./!@#$%^&*()\\-_+="\'|{}\\[\\];:\\\\].*'),
-      'One special character',
-    )
-    .min(8, 'Must be at least 8 characters in length')
-    .required('New Password is required'),
-  repeatPassword: Nope.string()
-    .oneOf([Nope.ref('password')], "Passwords don't match")
-    .required(),
-  accessToken: Nope.string(),
-  birthYear: Nope.number().min(1900).max(2013),
-  email: Nope.string().email(),
-  tags: Nope.array().of(Nope.string()).required(),
-  enabled: Nope.boolean(),
-  like: Nope.object().shape({
-    id: Nope.number().required(),
-    name: Nope.string().atLeast(4).required(),
-  }),
-});
+export const schema = z
+  .object({
+    username: z.string().regex(/^\w+$/).min(3).max(30),
+    password: z
+      .string()
+      .regex(new RegExp('.*[A-Z].*'), 'One uppercase character')
+      .regex(new RegExp('.*[a-z].*'), 'One lowercase character')
+      .regex(new RegExp('.*\\d.*'), 'One number')
+      .regex(
+        new RegExp('.*[`~<>?,./!@#$%^&*()\\-_+="\'|{}\\[\\];:\\\\].*'),
+        'One special character',
+      )
+      .min(8, 'Must be at least 8 characters in length'),
+    repeatPassword: z.string(),
+    accessToken: z.union([z.string(), z.number()]),
+    birthYear: z.number().min(1900).max(2013).optional(),
+    email: z.string().email().optional(),
+    tags: z.array(z.string()),
+    enabled: z.boolean(),
+    url: z.string().url('Custom error url').or(z.literal('')),
+    like: z
+      .array(
+        z.object({
+          id: z.number(),
+          name: z.string().length(4),
+        }),
+      )
+      .optional(),
+    dateStr: z
+      .string()
+      .transform((value) => new Date(value))
+      .refine((value) => !isNaN(value.getTime()), {
+        message: 'Invalid date',
+      }),
+  })
+  .refine((obj) => obj.password === obj.repeatPassword, {
+    message: 'Passwords do not match',
+    path: ['confirm'],
+  });
 
-export const validData = {
+export const validData: z.input<typeof schema> = {
   username: 'Doe',
   password: 'Password123_',
   repeatPassword: 'Password123_',
@@ -36,18 +50,22 @@ export const validData = {
   tags: ['tag1', 'tag2'],
   enabled: true,
   accessToken: 'accessToken',
-  like: {
-    id: 1,
-    name: 'name',
-  },
+  url: 'https://react-hook-form.com/',
+  like: [
+    {
+      id: 1,
+      name: 'name',
+    },
+  ],
+  dateStr: '2020-01-01',
 };
 
 export const invalidData = {
   password: '___',
   email: '',
   birthYear: 'birthYear',
-  like: { id: 'z' },
-  tags: [1, 2, 3],
+  like: [{ id: 'z' }],
+  url: 'abc',
 };
 
 export const fields: Record<InternalFieldName, Field['_f']> = {
