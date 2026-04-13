@@ -1,3 +1,19 @@
-# React + TypeScript + Vite
+# @babel/compat-data
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> The compat-data to determine required Babel plugins
+
+See our website [@babel/compat-data](https://babeljs.io/docs/babel-compat-data) for more information.
+
+## Install
+
+Using npm:
+
+```sh
+npm install --save @babel/compat-data
+```
+
+or using yarn:
+
+```sh
+yarn add @babel/compat-data
+```
