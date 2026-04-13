@@ -1,57 +1,44 @@
-import Schema, { Type, string, number, array, boolean } from 'computed-types';
+import Nope from 'nope-validator';
 import { Field, InternalFieldName } from 'react-hook-form';
 
-export const schema = Schema({
-  username: string.regexp(/^\w+$/).min(3).max(30),
-  password: string
-    .regexp(new RegExp('.*[A-Z].*'), 'One uppercase character')
-    .regexp(new RegExp('.*[a-z].*'), 'One lowercase character')
-    .regexp(new RegExp('.*\\d.*'), 'One number')
-    .regexp(
+export const schema = Nope.object().shape({
+  username: Nope.string().regex(/^\w+$/).min(2).max(30).required(),
+  password: Nope.string()
+    .regex(new RegExp('.*[A-Z].*'), 'One uppercase character')
+    .regex(new RegExp('.*[a-z].*'), 'One lowercase character')
+    .regex(new RegExp('.*\\d.*'), 'One number')
+    .regex(
       new RegExp('.*[`~<>?,./!@#$%^&*()\\-_+="\'|{}\\[\\];:\\\\].*'),
       'One special character',
     )
-    .min(8, 'Must be at least 8 characters in length'),
-  repeatPassword: string,
-  accessToken: Schema.either(string, number).optional(),
-  birthYear: number.min(1900).max(2013).optional(),
-  email: string
-    .regexp(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/)
-    .error('Incorrect email'),
-  tags: array.of(string),
-  enabled: boolean,
-  like: array
-    .of({
-      id: number,
-      name: string.min(4).max(4),
-    })
-    .optional(),
-  address: Schema({
-    city: string.min(3, 'Is required'),
-    zipCode: string
-      .min(5, 'Must be 5 characters long')
-      .max(5, 'Must be 5 characters long'),
+    .min(8, 'Must be at least 8 characters in length')
+    .required('New Password is required'),
+  repeatPassword: Nope.string()
+    .oneOf([Nope.ref('password')], "Passwords don't match")
+    .required(),
+  accessToken: Nope.string(),
+  birthYear: Nope.number().min(1900).max(2013),
+  email: Nope.string().email(),
+  tags: Nope.array().of(Nope.string()).required(),
+  enabled: Nope.boolean(),
+  like: Nope.object().shape({
+    id: Nope.number().required(),
+    name: Nope.string().atLeast(4).required(),
   }),
 });
 
-export const validData: Type<typeof schema> = {
+export const validData = {
   username: 'Doe',
   password: 'Password123_',
   repeatPassword: 'Password123_',
-  accessToken: 'accessToken',
   birthYear: 2000,
   email: 'john@doe.com',
   tags: ['tag1', 'tag2'],
   enabled: true,
-  like: [
-    {
-      id: 1,
-      name: 'name',
-    },
-  ],
-  address: {
-    city: 'Awesome city',
-    zipCode: '12345',
+  accessToken: 'accessToken',
+  like: {
+    id: 1,
+    name: 'name',
   },
 };
 
@@ -59,11 +46,8 @@ export const invalidData = {
   password: '___',
   email: '',
   birthYear: 'birthYear',
-  like: [{ id: 'z' }],
-  address: {
-    city: '',
-    zipCode: '123',
-  },
+  like: { id: 'z' },
+  tags: [1, 2, 3],
 };
 
 export const fields: Record<InternalFieldName, Field['_f']> = {

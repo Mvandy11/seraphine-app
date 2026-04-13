@@ -1,2 +1,2 @@
-export * from './effect-ts';
+export * from './nope';
 export * from './types';

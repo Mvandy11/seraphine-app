@@ -1,19 +1,23 @@
 import { render, screen } from '@testing-library/react';
 import user from '@testing-library/user-event';
-import Schema, { Type, string } from 'computed-types';
+import Nope from 'nope-validator';
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { computedTypesResolver } from '..';
+import { nopeResolver } from '..';
 
 const USERNAME_REQUIRED_MESSAGE = 'username field is required';
 const PASSWORD_REQUIRED_MESSAGE = 'password field is required';
 
-const schema = Schema({
-  username: string.min(2).error(USERNAME_REQUIRED_MESSAGE),
-  password: string.min(2).error(PASSWORD_REQUIRED_MESSAGE),
+const schema = Nope.object().shape({
+  username: Nope.string().required(USERNAME_REQUIRED_MESSAGE),
+  password: Nope.string().required(PASSWORD_REQUIRED_MESSAGE),
 });
 
-type FormData = Type<typeof schema> & { unusedProperty: string };
+interface FormData {
+  unusedProperty: string;
+  username: string;
+  password: string;
+}
 
 interface Props {
   onSubmit: (data: FormData) => void;
@@ -21,7 +25,7 @@ interface Props {
 
 function TestComponent({ onSubmit }: Props) {
   const { register, handleSubmit } = useForm<FormData>({
-    resolver: computedTypesResolver(schema),
+    resolver: nopeResolver(schema),
     shouldUseNativeValidation: true,
   });
 
@@ -36,7 +40,7 @@ function TestComponent({ onSubmit }: Props) {
   );
 }
 
-test("form's native validation with computed-types", async () => {
+test("form's native validation with Nope", async () => {
   const handleSubmit = vi.fn();
   render(<TestComponent onSubmit={handleSubmit} />);
 

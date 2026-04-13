@@ -1,17 +1,18 @@
-import { Type } from 'arktype';
-import { FieldValues, ResolverOptions, ResolverResult } from 'react-hook-form';
+import type { NopeObject } from 'nope-validator/lib/cjs/NopeObject';
+import type {
+  FieldValues,
+  ResolverOptions,
+  ResolverResult,
+} from 'react-hook-form';
 
-export type Resolver = <T extends Type<any>>(
+type ValidateOptions = Parameters<NopeObject['validate']>[2];
+type Context = Parameters<NopeObject['validate']>[1];
+
+export type Resolver = <T extends NopeObject>(
   schema: T,
-  schemaOptions?: undefined,
-  factoryOptions?: {
-    /**
-     * Return the raw input values rather than the parsed values.
-     * @default false
-     */
-    raw?: boolean;
-  },
-) => <TFieldValues extends FieldValues, TContext>(
+  schemaOptions?: ValidateOptions,
+  resolverOptions?: { mode?: 'async' | 'sync'; rawValues?: boolean },
+) => <TFieldValues extends FieldValues, TContext extends Context>(
   values: TFieldValues,
   context: TContext | undefined,
   options: ResolverOptions<TFieldValues>,
