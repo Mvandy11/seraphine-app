@@ -1,49 +1,71 @@
 {
-  "name": "@eslint/core",
-  "version": "0.17.0",
-  "description": "Runtime-agnostic core of ESLint",
-  "type": "module",
-  "types": "./dist/esm/types.d.ts",
-  "exports": {
-    "types": {
-      "import": "./dist/esm/types.d.ts",
-      "require": "./dist/cjs/types.d.cts"
-    }
-  },
-  "files": [
-    "dist"
-  ],
+  "name": "@floating-ui/dom",
+  "version": "1.7.6",
+  "description": "Floating UI for the web",
   "publishConfig": {
     "access": "public"
   },
-  "scripts": {
-    "build:cts": "node -e \"fs.cpSync('dist/esm/types.d.ts', 'dist/cjs/types.d.cts')\"",
-    "build": "tsc && npm run build:cts",
-    "test:jsr": "npx jsr@latest publish --dry-run",
-    "test:types": "tsc -p tests/types/tsconfig.json"
+  "main": "./dist/floating-ui.dom.umd.js",
+  "module": "./dist/floating-ui.dom.esm.js",
+  "unpkg": "./dist/floating-ui.dom.umd.min.js",
+  "types": "./dist/floating-ui.dom.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "types": "./dist/floating-ui.dom.d.mts",
+        "default": "./dist/floating-ui.dom.mjs"
+      },
+      "types": "./dist/floating-ui.dom.d.ts",
+      "module": "./dist/floating-ui.dom.esm.js",
+      "default": "./dist/floating-ui.dom.umd.js"
+    }
   },
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "author": "atomiks",
+  "license": "MIT",
+  "bugs": "https://github.com/floating-ui/floating-ui",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/eslint/rewrite.git",
-    "directory": "packages/core"
+    "url": "https://github.com/floating-ui/floating-ui.git",
+    "directory": "packages/dom"
   },
+  "homepage": "https://floating-ui.com",
   "keywords": [
-    "eslint",
-    "core"
+    "tooltip",
+    "popover",
+    "dropdown",
+    "menu",
+    "popup",
+    "positioning"
   ],
-  "author": "Nicholas C. Zakas",
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/eslint/rewrite/issues"
-  },
-  "homepage": "https://github.com/eslint/rewrite/tree/main/packages/core#readme",
   "dependencies": {
-    "@types/json-schema": "^7.0.15"
+    "@floating-ui/core": "^1.7.5",
+    "@floating-ui/utils": "^0.2.11"
   },
   "devDependencies": {
-    "json-schema": "^0.4.0"
+    "@types/react": "^18.3.19",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.21.1",
+    "config": "0.0.0"
   },
-  "engines": {
-    "node": "^18.18.0 || ^20.9.0 || >=21.1.0"
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "clean": "rimraf dist out-tsc test-results",
+    "dev": "vite",
+    "build": "rollup -c",
+    "build:api": "build-api --tsc tsconfig.lib.json",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "publint": "publint",
+    "playwright": "playwright test ./test/functional",
+    "typecheck": "tsc -b"
   }
 }
