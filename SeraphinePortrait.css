@@ -1,0 +1,57 @@
+.seraphine-portrait-wrapper {
+  width: 100%;
+  height: 50vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.seraphine-portrait-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  animation: fadeIn 1.2s ease-out forwards, float 6s ease-in-out infinite;
+}
+
+.seraphine-portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(1.05) contrast(1.05);
+  animation: shimmer 16s infinite ease-in-out;
+}
+
+.seraphine-aura {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 140%;
+  height: 140%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(120, 80, 255, 0.25), transparent 70%);
+  filter: blur(60px);
+  animation: auraPulse 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Animations */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(1.05); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes auraPulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.55; }
+}
+
+@keyframes shimmer {
+  0%, 90% { filter: brightness(1.05); }
+  95% { filter: brightness(1.25); }
+  100% { filter: brightness(1.05); }
+}
