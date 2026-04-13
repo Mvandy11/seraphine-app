@@ -1,2 +1,2 @@
-export * from './arktype';
+export * from './effect-ts';
 export * from './types';

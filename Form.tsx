@@ -1,16 +1,19 @@
 import { render, screen } from '@testing-library/react';
 import user from '@testing-library/user-event';
-import { type } from 'arktype';
+import Schema, { Type, string } from 'computed-types';
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { arktypeResolver } from '..';
+import { computedTypesResolver } from '..';
 
-const schema = type({
-  username: 'string>1',
-  password: 'string>1',
+const schema = Schema({
+  username: string.min(2).error('username field is required'),
+  password: string.min(2).error('password field is required'),
+  address: Schema({
+    zipCode: string.min(5).max(5).error('zipCode field is required'),
+  }),
 });
 
-type FormData = typeof schema.infer & { unusedProperty: string };
+type FormData = Type<typeof schema> & { unusedProperty: string };
 
 interface Props {
   onSubmit: (data: FormData) => void;
@@ -22,7 +25,7 @@ function TestComponent({ onSubmit }: Props) {
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>({
-    resolver: arktypeResolver(schema), // Useful to check TypeScript regressions
+    resolver: computedTypesResolver(schema), // Useful to check TypeScript regressions
   });
 
   return (
@@ -33,12 +36,17 @@ function TestComponent({ onSubmit }: Props) {
       <input {...register('password')} />
       {errors.password && <span role="alert">{errors.password.message}</span>}
 
+      <input {...register('address.zipCode')} />
+      {errors.address?.zipCode && (
+        <span role="alert">{errors.address.zipCode.message}</span>
+      )}
+
       <button type="submit">submit</button>
     </form>
   );
 }
 
-test("form's validation with arkType and TypeScript's integration", async () => {
+test("form's validation with computed-types and TypeScript's integration", async () => {
   const handleSubmit = vi.fn();
   render(<TestComponent onSubmit={handleSubmit} />);
 
@@ -46,11 +54,8 @@ test("form's validation with arkType and TypeScript's integration", async () => 
 
   await user.click(screen.getByText(/submit/i));
 
-  expect(
-    screen.getByText('username must be more than length 1 (was 0)'),
-  ).toBeInTheDocument();
-  expect(
-    screen.getByText('password must be more than length 1 (was 0)'),
-  ).toBeInTheDocument();
+  expect(screen.getByText(/username field is required/i)).toBeInTheDocument();
+  expect(screen.getByText(/password field is required/i)).toBeInTheDocument();
+  expect(screen.getByText(/zipCode field is required/i)).toBeInTheDocument();
   expect(handleSubmit).not.toHaveBeenCalled();
 });

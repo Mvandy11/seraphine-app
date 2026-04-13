@@ -1,40 +1,58 @@
-import { type } from 'arktype';
+import Schema, { Type, string, number, array, boolean } from 'computed-types';
 import { Field, InternalFieldName } from 'react-hook-form';
 
-export const schema = type({
-  username: 'string>2',
-  password: '/.*[A-Za-z].*/>8|/.*\\d.*/',
-  repeatPassword: 'string>1',
-  accessToken: 'string|number',
-  birthYear: '1900<number<2013',
-  email: 'email',
-  tags: 'string[]',
-  enabled: 'boolean',
-  url: 'string>1',
-  'like?': type({
-    id: 'number',
-    name: 'string>3',
-  }).array(),
-  dateStr: 'Date',
+export const schema = Schema({
+  username: string.regexp(/^\w+$/).min(3).max(30),
+  password: string
+    .regexp(new RegExp('.*[A-Z].*'), 'One uppercase character')
+    .regexp(new RegExp('.*[a-z].*'), 'One lowercase character')
+    .regexp(new RegExp('.*\\d.*'), 'One number')
+    .regexp(
+      new RegExp('.*[`~<>?,./!@#$%^&*()\\-_+="\'|{}\\[\\];:\\\\].*'),
+      'One special character',
+    )
+    .min(8, 'Must be at least 8 characters in length'),
+  repeatPassword: string,
+  accessToken: Schema.either(string, number).optional(),
+  birthYear: number.min(1900).max(2013).optional(),
+  email: string
+    .regexp(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/)
+    .error('Incorrect email'),
+  tags: array.of(string),
+  enabled: boolean,
+  like: array
+    .of({
+      id: number,
+      name: string.min(4).max(4),
+    })
+    .optional(),
+  address: Schema({
+    city: string.min(3, 'Is required'),
+    zipCode: string
+      .min(5, 'Must be 5 characters long')
+      .max(5, 'Must be 5 characters long'),
+  }),
 });
 
-export const validData: typeof schema.infer = {
+export const validData: Type<typeof schema> = {
   username: 'Doe',
   password: 'Password123_',
   repeatPassword: 'Password123_',
+  accessToken: 'accessToken',
   birthYear: 2000,
   email: 'john@doe.com',
   tags: ['tag1', 'tag2'],
   enabled: true,
-  accessToken: 'accessToken',
-  url: 'https://react-hook-form.com/',
   like: [
     {
       id: 1,
       name: 'name',
     },
   ],
-  dateStr: new Date('2020-01-01'),
+  address: {
+    city: 'Awesome city',
+    zipCode: '12345',
+  },
 };
 
 export const invalidData = {
@@ -42,7 +60,10 @@ export const invalidData = {
   email: '',
   birthYear: 'birthYear',
   like: [{ id: 'z' }],
-  url: 'abc',
+  address: {
+    city: '',
+    zipCode: '123',
+  },
 };
 
 export const fields: Record<InternalFieldName, Field['_f']> = {

@@ -1,16 +1,19 @@
 import { render, screen } from '@testing-library/react';
 import user from '@testing-library/user-event';
-import { type } from 'arktype';
+import Schema, { Type, string } from 'computed-types';
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { arktypeResolver } from '..';
+import { computedTypesResolver } from '..';
 
-const schema = type({
-  username: 'string>1',
-  password: 'string>1',
+const USERNAME_REQUIRED_MESSAGE = 'username field is required';
+const PASSWORD_REQUIRED_MESSAGE = 'password field is required';
+
+const schema = Schema({
+  username: string.min(2).error(USERNAME_REQUIRED_MESSAGE),
+  password: string.min(2).error(PASSWORD_REQUIRED_MESSAGE),
 });
 
-type FormData = typeof schema.infer;
+type FormData = Type<typeof schema> & { unusedProperty: string };
 
 interface Props {
   onSubmit: (data: FormData) => void;
@@ -18,7 +21,7 @@ interface Props {
 
 function TestComponent({ onSubmit }: Props) {
   const { register, handleSubmit } = useForm<FormData>({
-    resolver: arktypeResolver(schema),
+    resolver: computedTypesResolver(schema),
     shouldUseNativeValidation: true,
   });
 
@@ -33,7 +36,7 @@ function TestComponent({ onSubmit }: Props) {
   );
 }
 
-test("form's native validation with Zod", async () => {
+test("form's native validation with computed-types", async () => {
   const handleSubmit = vi.fn();
   render(<TestComponent onSubmit={handleSubmit} />);
 
@@ -56,16 +59,12 @@ test("form's native validation with Zod", async () => {
   // username
   usernameField = screen.getByPlaceholderText(/username/i) as HTMLInputElement;
   expect(usernameField.validity.valid).toBe(false);
-  expect(usernameField.validationMessage).toBe(
-    'username must be more than length 1',
-  );
+  expect(usernameField.validationMessage).toBe(USERNAME_REQUIRED_MESSAGE);
 
   // password
   passwordField = screen.getByPlaceholderText(/password/i) as HTMLInputElement;
   expect(passwordField.validity.valid).toBe(false);
-  expect(passwordField.validationMessage).toBe(
-    'password must be more than length 1',
-  );
+  expect(passwordField.validationMessage).toBe(PASSWORD_REQUIRED_MESSAGE);
 
   await user.type(screen.getByPlaceholderText(/username/i), 'joe');
   await user.type(screen.getByPlaceholderText(/password/i), 'password');
