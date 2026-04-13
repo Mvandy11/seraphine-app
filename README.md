@@ -1,19 +1,19 @@
-# @babel/helper-plugin-utils
+# @babel/helper-validator-option
 
-> General utilities for plugins to use
+> Validate plugin/preset options
 
-See our website [@babel/helper-plugin-utils](https://babeljs.io/docs/babel-helper-plugin-utils) for more information.
+See our website [@babel/helper-validator-option](https://babeljs.io/docs/babel-helper-validator-option) for more information.
 
 ## Install
 
 Using npm:
 
 ```sh
-npm install --save @babel/helper-plugin-utils
+npm install --save @babel/helper-validator-option
 ```
 
 or using yarn:
 
 ```sh
-yarn add @babel/helper-plugin-utils
+yarn add @babel/helper-validator-option
 ```
