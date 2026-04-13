@@ -3,85 +3,106 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.createConfigItem = createConfigItem;
-exports.createConfigItemAsync = createConfigItemAsync;
-exports.createConfigItemSync = createConfigItemSync;
-Object.defineProperty(exports, "default", {
-  enumerable: true,
-  get: function () {
-    return _full.default;
+exports.default = void 0;
+exports.generate = generate;
+var _sourceMap = require("./source-map.js");
+var _printer = require("./printer.js");
+function normalizeOptions(code, opts, ast) {
+  var _opts$recordAndTupleS;
+  if (opts.experimental_preserveFormat) {
+    if (typeof code !== "string") {
+      throw new Error("`experimental_preserveFormat` requires the original `code` to be passed to @babel/generator as a string");
+    }
+    if (!opts.retainLines) {
+      throw new Error("`experimental_preserveFormat` requires `retainLines` to be set to `true`");
+    }
+    if (opts.compact && opts.compact !== "auto") {
+      throw new Error("`experimental_preserveFormat` is not compatible with the `compact` option");
+    }
+    if (opts.minified) {
+      throw new Error("`experimental_preserveFormat` is not compatible with the `minified` option");
+    }
+    if (opts.jsescOption) {
+      throw new Error("`experimental_preserveFormat` is not compatible with the `jsescOption` option");
+    }
+    if (!Array.isArray(ast.tokens)) {
+      throw new Error("`experimental_preserveFormat` requires the AST to have attached the token of the input code. Make sure to enable the `tokens: true` parser option.");
+    }
   }
-});
-exports.loadOptions = loadOptions;
-exports.loadOptionsAsync = loadOptionsAsync;
-exports.loadOptionsSync = loadOptionsSync;
-exports.loadPartialConfig = loadPartialConfig;
-exports.loadPartialConfigAsync = loadPartialConfigAsync;
-exports.loadPartialConfigSync = loadPartialConfigSync;
-function _gensync() {
-  const data = require("gensync");
-  _gensync = function () {
-    return data;
+  const format = {
+    auxiliaryCommentBefore: opts.auxiliaryCommentBefore,
+    auxiliaryCommentAfter: opts.auxiliaryCommentAfter,
+    shouldPrintComment: opts.shouldPrintComment,
+    preserveFormat: opts.experimental_preserveFormat,
+    retainLines: opts.retainLines,
+    retainFunctionParens: opts.retainFunctionParens,
+    comments: opts.comments == null || opts.comments,
+    compact: opts.compact,
+    minified: opts.minified,
+    concise: opts.concise,
+    indent: {
+      adjustMultilineComment: true,
+      style: "  "
+    },
+    jsescOption: Object.assign({
+      quotes: "double",
+      wrap: true,
+      minimal: false
+    }, opts.jsescOption),
+    topicToken: opts.topicToken
   };
-  return data;
-}
-var _full = require("./full.js");
-var _partial = require("./partial.js");
-var _item = require("./item.js");
-var _rewriteStackTrace = require("../errors/rewrite-stack-trace.js");
-const loadPartialConfigRunner = _gensync()(_partial.loadPartialConfig);
-function loadPartialConfigAsync(...args) {
-  return (0, _rewriteStackTrace.beginHiddenCallStack)(loadPartialConfigRunner.async)(...args);
-}
-function loadPartialConfigSync(...args) {
-  return (0, _rewriteStackTrace.beginHiddenCallStack)(loadPartialConfigRunner.sync)(...args);
-}
-function loadPartialConfig(opts, callback) {
-  if (callback !== undefined) {
-    (0, _rewriteStackTrace.beginHiddenCallStack)(loadPartialConfigRunner.errback)(opts, callback);
-  } else if (typeof opts === "function") {
-    (0, _rewriteStackTrace.beginHiddenCallStack)(loadPartialConfigRunner.errback)(undefined, opts);
+  format.decoratorsBeforeExport = opts.decoratorsBeforeExport;
+  format.jsescOption.json = opts.jsonCompatibleStrings;
+  format.recordAndTupleSyntaxType = (_opts$recordAndTupleS = opts.recordAndTupleSyntaxType) != null ? _opts$recordAndTupleS : "hash";
+  format.importAttributesKeyword = opts.importAttributesKeyword;
+  if (format.minified) {
+    format.compact = true;
+    format.shouldPrintComment = format.shouldPrintComment || (() => format.comments);
   } else {
-    return loadPartialConfigSync(opts);
+    format.shouldPrintComment = format.shouldPrintComment || (value => format.comments || value.includes("@license") || value.includes("@preserve"));
   }
-}
-function* loadOptionsImpl(opts) {
-  var _config$options;
-  const config = yield* (0, _full.default)(opts);
-  return (_config$options = config == null ? void 0 : config.options) != null ? _config$options : null;
-}
-const loadOptionsRunner = _gensync()(loadOptionsImpl);
-function loadOptionsAsync(...args) {
-  return (0, _rewriteStackTrace.beginHiddenCallStack)(loadOptionsRunner.async)(...args);
-}
-function loadOptionsSync(...args) {
-  return (0, _rewriteStackTrace.beginHiddenCallStack)(loadOptionsRunner.sync)(...args);
-}
-function loadOptions(opts, callback) {
-  if (callback !== undefined) {
-    (0, _rewriteStackTrace.beginHiddenCallStack)(loadOptionsRunner.errback)(opts, callback);
-  } else if (typeof opts === "function") {
-    (0, _rewriteStackTrace.beginHiddenCallStack)(loadOptionsRunner.errback)(undefined, opts);
-  } else {
-    return loadOptionsSync(opts);
+  if (format.compact === "auto") {
+    format.compact = typeof code === "string" && code.length > 500000;
+    if (format.compact) {
+      console.error("[BABEL] Note: The code generator has deoptimised the styling of " + `${opts.filename} as it exceeds the max of ${"500KB"}.`);
+    }
   }
-}
-const createConfigItemRunner = _gensync()(_item.createConfigItem);
-function createConfigItemAsync(...args) {
-  return (0, _rewriteStackTrace.beginHiddenCallStack)(createConfigItemRunner.async)(...args);
-}
-function createConfigItemSync(...args) {
-  return (0, _rewriteStackTrace.beginHiddenCallStack)(createConfigItemRunner.sync)(...args);
-}
-function createConfigItem(target, options, callback) {
-  if (callback !== undefined) {
-    (0, _rewriteStackTrace.beginHiddenCallStack)(createConfigItemRunner.errback)(target, options, callback);
-  } else if (typeof options === "function") {
-    (0, _rewriteStackTrace.beginHiddenCallStack)(createConfigItemRunner.errback)(target, undefined, callback);
-  } else {
-    return createConfigItemSync(target, options);
+  if (format.compact || format.preserveFormat) {
+    format.indent.adjustMultilineComment = false;
   }
+  const {
+    auxiliaryCommentBefore,
+    auxiliaryCommentAfter,
+    shouldPrintComment
+  } = format;
+  if (auxiliaryCommentBefore && !shouldPrintComment(auxiliaryCommentBefore)) {
+    format.auxiliaryCommentBefore = undefined;
+  }
+  if (auxiliaryCommentAfter && !shouldPrintComment(auxiliaryCommentAfter)) {
+    format.auxiliaryCommentAfter = undefined;
+  }
+  return format;
 }
-0 && 0;
+exports.CodeGenerator = class CodeGenerator {
+  constructor(ast, opts = {}, code) {
+    this._ast = void 0;
+    this._format = void 0;
+    this._map = void 0;
+    this._ast = ast;
+    this._format = normalizeOptions(code, opts, ast);
+    this._map = opts.sourceMaps ? new _sourceMap.default(opts, code) : null;
+  }
+  generate() {
+    const printer = new _printer.default(this._format, this._map);
+    return printer.generate(this._ast);
+  }
+};
+function generate(ast, opts = {}, code) {
+  const format = normalizeOptions(code, opts, ast);
+  const map = opts.sourceMaps ? new _sourceMap.default(opts, code) : null;
+  const printer = new _printer.default(format, map, ast.tokens, typeof code === "string" ? code : null);
+  return printer.generate(ast);
+}
+var _default = exports.default = generate;
 
 //# sourceMappingURL=index.js.map
