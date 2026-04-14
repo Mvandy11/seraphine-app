@@ -17,21 +17,28 @@ const Header: React.FC = () => {
         color: "white",
       }}
     >
-      <Link to="/" style={{ fontSize: "1.4rem", fontWeight: 700, color: "white" }}>
+      {/* HOME */}
+      <Link
+        to="/"
+        style={{ fontSize: "1.4rem", fontWeight: 700, color: "white" }}
+      >
         Seraphine
       </Link>
 
       <nav style={{ display: "flex", gap: "20px", alignItems: "center" }}>
+        {/* ORACLE */}
         <Link to="/oracle" style={{ color: "white" }}>
           Oracle
         </Link>
 
+        {/* MANAGE (only when logged in) */}
         {user && (
           <Link to="/manage" style={{ color: "white" }}>
             Manage
           </Link>
         )}
 
+        {/* SUBSCRIBE or SIGN OUT */}
         {!user ? (
           <Link to="/subscribe" style={{ color: "white" }}>
             Subscribe
@@ -57,4 +64,3 @@ const Header: React.FC = () => {
 };
 
 export default Header;
-
