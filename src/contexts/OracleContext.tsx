@@ -6,6 +6,7 @@ interface OracleState {
   phase: "idle" | "drawing" | "complete";
   emotion: "serene" | "fierce" | "sorrow" | "ascended" | null;
   revealedCard: { id: string; name: string; image: string } | null;
+  spread: any[] | null;
 }
 
 interface OracleContextValue {
@@ -15,6 +16,7 @@ interface OracleContextValue {
   setPhase: (p: OracleState["phase"]) => void;
   setEmotion: (e: OracleState["emotion"]) => void;
   setRevealedCard: (c: OracleState["revealedCard"]) => void;
+  setSpread: (s: any[] | null) => void;
 }
 
 const OracleContext = createContext<OracleContextValue | undefined>(undefined);
@@ -26,6 +28,7 @@ export function OracleProvider({ children }: { children: React.ReactNode }) {
     phase: "idle",
     emotion: null,
     revealedCard: null,
+    spread: null,
   });
 
   const setQuestion = (question: string) =>
@@ -43,6 +46,9 @@ export function OracleProvider({ children }: { children: React.ReactNode }) {
   const setRevealedCard = (revealedCard: OracleState["revealedCard"]) =>
     setState((s) => ({ ...s, revealedCard }));
 
+  const setSpread = (spread: any[] | null) =>
+    setState((s) => ({ ...s, spread }));
+
   return (
     <OracleContext.Provider
       value={{
@@ -52,6 +58,7 @@ export function OracleProvider({ children }: { children: React.ReactNode }) {
         setPhase,
         setEmotion,
         setRevealedCard,
+        setSpread,
       }}
     >
       {children}

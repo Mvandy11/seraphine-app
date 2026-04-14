@@ -1,25 +1,40 @@
 import { useOracleContext } from "@/contexts/OracleContext";
-import { drawCard } from "@/utils/drawCard";
+import { drawSpread } from "@/utils/drawSpread";
 import { cardEmotions } from "@/data/emotions";
+import { speak } from "@/utils/speak";
 
 export default function OracleConsole() {
-  const { state, setQuestion, setAnswer, setPhase, setEmotion } =
-    useOracleContext();
+  const {
+    state,
+    setQuestion,
+    setAnswer,
+    setPhase,
+    setEmotion,
+    setRevealedCard,
+    setSpread,
+  } = useOracleContext();
 
   const handleAsk = async () => {
     if (!state.question.trim()) return;
 
     setPhase("drawing");
+    setRevealedCard(null);
+    setSpread(null);
 
     setTimeout(() => {
-      const card = drawCard("major");
-      const emotion = cardEmotions[card.id];
+      const spread = drawSpread("three");
+      const mainCard = spread[1];
+      const emotion = cardEmotions[mainCard.id];
 
       setEmotion(emotion);
+      setSpread(spread);
 
-      const message = `Seraphine reveals **${card.name}**.`;
+      const message = `Seraphine reveals a three‑card spread. The central force is **${mainCard.name}**.`;
+
       setAnswer(message);
       setPhase("complete");
+
+      speak(message, emotion);
     }, 1500);
   };
 

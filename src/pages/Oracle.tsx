@@ -1,12 +1,14 @@
 import { useOracleContext } from "@/contexts/OracleContext";
 import OracleConsole from "@/components/OracleConsole";
+import CardReveal from "@/components/CardReveal";
 
 export default function Oracle() {
-  const { state, emotion } = useOracleContext();
+  const { state } = useOracleContext();
+  const emotion = state.emotion;
 
   const portrait = emotion
     ? `/art/seraphine/emotion/${emotion}.png`
-    : `/art/seraphine/emotion/portrait.png`;
+    : `/art/seraphine/portrait.png`;
 
   const bg =
     emotion === "sorrow"
@@ -36,7 +38,6 @@ export default function Oracle() {
         padding: "40px 20px",
       }}
     >
-      {/* Aura Layer */}
       <div
         style={{
           position: "absolute",
@@ -67,6 +68,20 @@ export default function Oracle() {
             filter: "drop-shadow(0 0 25px rgba(124,58,237,0.6))",
           }}
         />
+
+        {state.spread && (
+          <div
+            style={{
+              display: "flex",
+              gap: "20px",
+              marginTop: "20px",
+            }}
+          >
+            {state.spread.map((card, i) => (
+              <CardReveal key={i} card={card} />
+            ))}
+          </div>
+        )}
 
         <OracleConsole />
 

@@ -1,0 +1,443 @@
+NEW FILE — /src/utils/speak.ts
+(Seraphine’s voice with emotional modulation)
+------------------------------------------------------------
+ts
+export function speak(text: string, emotion?: string) {
+  if (!window.speechSynthesis) return;
+
+  const utter = new SpeechSynthesisUtterance(text);
+
+  const voices = speechSynthesis.getVoices();
+  const female =
+    voices.find((v) => v.name.toLowerCase().includes("female")) ||
+    voices.find((v) => v.name.toLowerCase().includes("woman")) ||
+    voices.find((v) => v.name.toLowerCase().includes("zira")) ||
+    voices[0];
+
+  utter.voice = female;
+
+  switch (emotion) {
+    case "serene":
+      utter.rate = 0.9;
+      utter.pitch = 1.2;
+      break;
+    case "fierce":
+      utter.rate = 1.1;
+      utter.pitch = 0.9;
+      break;
+    case "sorrow":
+      utter.rate = 0.85;
+      utter.pitch = 0.8;
+      break;
+    case "ascended":
+      utter.rate = 1.0;
+      utter.pitch = 1.3;
+      break;
+    default:
+      utter.rate = 1.0;
+      utter.pitch = 1.0;
+  }
+
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utter);
+}
+------------------------------------------------------------
+⭐ NEW FILE — /src/components/CardReveal.tsx
+(Cinematic 3D flip animation)
+------------------------------------------------------------
+tsx
+import { useEffect, useState } from "react";
+
+export default function CardReveal({ card }: { card: any }) {
+  const [flipped, setFlipped] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setFlipped(true), 300);
+    return () => clearTimeout(t);
+  }, [card]);
+
+  return (
+    <div
+      style={{
+        perspective: "1200px",
+        width: "260px",
+        height: "420px",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          position: "relative",
+          transformStyle: "preserve-3d",
+          transition: "transform 1s ease",
+          transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backfaceVisibility: "hidden",
+            background: "linear-gradient(135deg, #1a1a1a, #3b0764)",
+            borderRadius: "12px",
+            border: "2px solid rgba(255,255,255,0.2)",
+            boxShadow: "0 0 30px rgba(124,58,237,0.4)",
+          }}
+        />
+
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backfaceVisibility: "hidden",
+            transform: "rotateY(180deg)",
+            borderRadius: "12px",
+            overflow: "hidden",
+            boxShadow: "0 0 40px rgba(124,58,237,0.6)",
+          }}
+        >
+          <img
+            src={card.image}
+            alt={card.name}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+------------------------------------------------------------
+⭐ NEW FILE — /src/utils/drawSpread.ts
+(Multi‑card spreads: 1‑card, 3‑card, Celtic Cross)
+------------------------------------------------------------
+ts
+import { drawCard } from "./drawCard";
+
+export function drawSpread(type: "one" | "three" | "celtic") {
+  if (type === "one") {
+    return [drawCard("major")];
+  }
+
+  if (type === "three") {
+    return [
+      { ...drawCard("major"), position: "past" },
+      { ...drawCard("major"), position: "present" },
+      { ...drawCard("major"), position: "future" },
+    ];
+  }
+
+  if (type === "celtic") {
+    return [
+      { ...drawCard("major"), position: "present" },
+      { ...drawCard("major"), position: "challenge" },
+      { ...drawCard("major"), position: "past" },
+      { ...drawCard("major"), position: "future" },
+      { ...drawCard("major"), position: "above" },
+      { ...drawCard("major"), position: "below" },
+      { ...drawCard("major"), position: "self" },
+      { ...drawCard("major"), position: "environment" },
+      { ...drawCard("major"), position: "hopes" },
+      { ...drawCard("major"), position: "outcome" },
+    ];
+  }
+
+  return [];
+}
+------------------------------------------------------------
+⭐ UPDATE — /src/contexts/OracleContext.tsx
+(Add revealedCard + spread)
+------------------------------------------------------------
+Replace your entire file with this:
+
+tsx
+import { createContext, useContext, useState } from "react";
+
+interface OracleState {
+  question: string;
+  answer: string | null;
+  phase: "idle" | "drawing" | "complete";
+  emotion: "serene" | "fierce" | "sorrow" | "ascended" | null;
+  revealedCard: { id: string; name: string; image: string } | null;
+  spread: any[] | null;
+}
+
+interface OracleContextValue {
+  state: OracleState;
+  setQuestion: (q: string) => void;
+  setAnswer: (a: string | null) => void;
+  setPhase: (p: OracleState["phase"]) => void;
+  setEmotion: (e: OracleState["emotion"]) => void;
+  setRevealedCard: (c: OracleState["revealedCard"]) => void;
+  setSpread: (s: any[] | null) => void;
+}
+
+const OracleContext = createContext<OracleContextValue | undefined>(undefined);
+
+export function OracleProvider({ children }: { children: React.ReactNode }) {
+  const [state, setState] = useState<OracleState>({
+    question: "",
+    answer: null,
+    phase: "idle",
+    emotion: null,
+    revealedCard: null,
+    spread: null,
+  });
+
+  const setQuestion = (question: string) =>
+    setState((s) => ({ ...s, question }));
+
+  const setAnswer = (answer: string | null) =>
+    setState((s) => ({ ...s, answer }));
+
+  const setPhase = (phase: OracleState["phase"]) =>
+    setState((s) => ({ ...s, phase }));
+
+  const setEmotion = (emotion: OracleState["emotion"]) =>
+    setState((s) => ({ ...s, emotion }));
+
+  const setRevealedCard = (revealedCard: OracleState["revealedCard"]) =>
+    setState((s) => ({ ...s, revealedCard }));
+
+  const setSpread = (spread: any[] | null) =>
+    setState((s) => ({ ...s, spread }));
+
+  return (
+    <OracleContext.Provider
+      value={{
+        state,
+        setQuestion,
+        setAnswer,
+        setPhase,
+        setEmotion,
+        setRevealedCard,
+        setSpread,
+      }}
+    >
+      {children}
+    </OracleContext.Provider>
+  );
+}
+
+export function useOracleContext() {
+  const ctx = useContext(OracleContext);
+  if (!ctx) throw new Error("useOracleContext must be used inside provider");
+  return ctx;
+}
+------------------------------------------------------------
+⭐ UPDATE — /src/components/OracleConsole.tsx
+(Add voice + spread support)
+------------------------------------------------------------
+Replace your entire file:
+
+tsx
+import { useOracleContext } from "@/contexts/OracleContext";
+import { drawCard } from "@/utils/drawCard";
+import { drawSpread } from "@/utils/drawSpread";
+import { cardEmotions } from "@/data/emotions";
+import { speak } from "@/utils/speak";
+
+export default function OracleConsole() {
+  const {
+    state,
+    setQuestion,
+    setAnswer,
+    setPhase,
+    setEmotion,
+    setRevealedCard,
+    setSpread,
+  } = useOracleContext();
+
+  const handleAsk = async () => {
+    if (!state.question.trim()) return;
+
+    setPhase("drawing");
+    setRevealedCard(null);
+    setSpread(null);
+
+    setTimeout(() => {
+      const spread = drawSpread("three");
+      const mainCard = spread[1];
+      const emotion = cardEmotions[mainCard.id];
+
+      setEmotion(emotion);
+      setSpread(spread);
+
+      const message = `Seraphine reveals a three‑card spread. The central force is **${mainCard.name}**.`;
+
+      setAnswer(message);
+      setPhase("complete");
+
+      speak(message, emotion);
+    }, 1500);
+  };
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: "20px",
+        padding: "20px",
+      }}
+    >
+      <textarea
+        placeholder="Ask your question..."
+        value={state.question}
+        onChange={(e) => setQuestion(e.target.value)}
+        style={{
+          width: "100%",
+          minHeight: "140px",
+          padding: "16px",
+          borderRadius: "12px",
+          background: "rgba(0,0,0,0.4)",
+          border: "1px solid rgba(255,255,255,0.15)",
+          color: "white",
+          fontSize: "1.2rem",
+          lineHeight: "1.6",
+          resize: "none",
+          outline: "none",
+          boxShadow: "0 0 20px rgba(124,58,237,0.3)",
+        }}
+      />
+
+      <button
+        onClick={handleAsk}
+        disabled={!state.question.trim()}
+        style={{
+          padding: "14px 32px",
+          fontSize: "1.2rem",
+          borderRadius: "8px",
+          background: state.question.trim()
+            ? "#7c3aed"
+            : "rgba(124,58,237,0.3)",
+          border: "none",
+          color: "white",
+          cursor: state.question.trim() ? "pointer" : "not-allowed",
+          boxShadow: state.question.trim()
+            ? "0 0 20px rgba(124,58,237,0.5)"
+            : "none",
+          transition: "0.2s ease",
+        }}
+      >
+        Ask the Oracle
+      </button>
+    </div>
+  );
+}
+------------------------------------------------------------
+⭐ UPDATE — /src/pages/Oracle.tsx
+(Display multi‑card spread)
+------------------------------------------------------------
+Replace your entire file:
+
+tsx
+import { useOracleContext } from "@/contexts/OracleContext";
+import OracleConsole from "@/components/OracleConsole";
+import CardReveal from "@/components/CardReveal";
+
+export default function Oracle() {
+  const { state, emotion } = useOracleContext();
+
+  const portrait = emotion
+    ? `/art/seraphine/emotion/${emotion}.png`
+    : `/art/seraphine/emotion/portrait.png`;
+
+  const bg =
+    emotion === "sorrow"
+      ? "/art/backgrounds/oracle.jpg"
+      : "/art/backgrounds/hero.jpg";
+
+  const aura =
+    emotion === "serene"
+      ? "radial-gradient(circle, rgba(124,58,237,0.2), transparent)"
+      : emotion === "fierce"
+      ? "radial-gradient(circle, rgba(255,0,80,0.25), transparent)"
+      : emotion === "sorrow"
+      ? "radial-gradient(circle, rgba(0,0,0,0.4), transparent)"
+      : emotion === "ascended"
+      ? "radial-gradient(circle, rgba(255,255,255,0.3), transparent)"
+      : "transparent";
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        minHeight: "100vh",
+        backgroundImage: `url(${bg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        transition: "0.8s ease",
+        padding: "40px 20px",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          background: aura,
+          transition: "0.8s ease",
+        }}
+      />
+
+      <div
+        style={{
+          position: "relative",
+          zIndex: 2,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "30px",
+        }}
+      >
+        <img
+          src={portrait}
+          alt="Seraphine"
+          style={{
+            width: "100%",
+            maxWidth: "420px",
+            transition: "0.6s ease",
+            filter: "drop-shadow(0 0 25px rgba(124,58,237,0.6))",
+          }}
+        />
+
+        {/* Multi‑card spread */}
+        {state.spread && (
+          <div
+            style={{
+              display: "flex",
+              gap: "20px",
+              marginTop: "20px",
+            }}
+          >
+            {state.spread.map((card, i) => (
+              <CardReveal key={i} card={card} />
+            ))}
+          </div>
+        )}
+
+        <OracleConsole />
+
+        {state.answer && (
+          <div
+            style={{
+              marginTop: "20px",
+              color: "white",
+              fontSize: "1.4rem",
+              textAlign: "center",
+              maxWidth: "600px",
+              textShadow: "0 0 10px rgba(0,0,0,0.6)",
+            }}
+            dangerouslySetInnerHTML={{ __html: state.answer }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
