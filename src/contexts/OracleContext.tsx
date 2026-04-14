@@ -1,49 +1,58 @@
 import { createContext, useContext, useState } from "react";
 
-type OraclePhase = "idle" | "drawing" | "revealing" | "complete";
-
 interface OracleState {
-  phase: OraclePhase;
   question: string;
-  answer: string;
+  answer: string | null;
+  phase: "idle" | "drawing" | "complete";
+  emotion: "serene" | "fierce" | "sorrow" | "ascended" | null;
+  revealedCard: { id: string; name: string; image: string } | null;
 }
 
 interface OracleContextValue {
   state: OracleState;
-  setPhase: (phase: OraclePhase) => void;
   setQuestion: (q: string) => void;
-  setAnswer: (a: string) => void;
-  reset: () => void;
+  setAnswer: (a: string | null) => void;
+  setPhase: (p: OracleState["phase"]) => void;
+  setEmotion: (e: OracleState["emotion"]) => void;
+  setRevealedCard: (c: OracleState["revealedCard"]) => void;
 }
 
-const OracleContext = createContext<OracleContextValue | null>(null);
+const OracleContext = createContext<OracleContextValue | undefined>(undefined);
 
 export function OracleProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<OracleState>({
-    phase: "idle",
     question: "",
-    answer: "",
+    answer: null,
+    phase: "idle",
+    emotion: null,
+    revealedCard: null,
   });
 
-  const setPhase = (phase: OraclePhase) =>
-    setState((prev) => ({ ...prev, phase }));
-
   const setQuestion = (question: string) =>
-    setState((prev) => ({ ...prev, question }));
+    setState((s) => ({ ...s, question }));
 
-  const setAnswer = (answer: string) =>
-    setState((prev) => ({ ...prev, answer }));
+  const setAnswer = (answer: string | null) =>
+    setState((s) => ({ ...s, answer }));
 
-  const reset = () =>
-    setState({
-      phase: "idle",
-      question: "",
-      answer: "",
-    });
+  const setPhase = (phase: OracleState["phase"]) =>
+    setState((s) => ({ ...s, phase }));
+
+  const setEmotion = (emotion: OracleState["emotion"]) =>
+    setState((s) => ({ ...s, emotion }));
+
+  const setRevealedCard = (revealedCard: OracleState["revealedCard"]) =>
+    setState((s) => ({ ...s, revealedCard }));
 
   return (
     <OracleContext.Provider
-      value={{ state, setPhase, setQuestion, setAnswer, reset }}
+      value={{
+        state,
+        setQuestion,
+        setAnswer,
+        setPhase,
+        setEmotion,
+        setRevealedCard,
+      }}
     >
       {children}
     </OracleContext.Provider>
@@ -52,7 +61,6 @@ export function OracleProvider({ children }: { children: React.ReactNode }) {
 
 export function useOracleContext() {
   const ctx = useContext(OracleContext);
-  if (!ctx) throw new Error("useOracleContext must be used inside OracleProvider");
+  if (!ctx) throw new Error("useOracleContext must be used inside provider");
   return ctx;
 }
-

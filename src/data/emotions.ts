@@ -1,6 +1,7 @@
-// src/data/emotions.ts
-
-export const cardEmotions: Record<string, "serene" | "fierce" | "sorrow" | "ascended"> = {
+export const cardEmotions: Record<
+  string,
+  "serene" | "fierce" | "sorrow" | "ascended"
+> = {
   "00-fool": "ascended",
   "01-magician": "fierce",
   "02-high-priestess": "serene",
@@ -22,5 +23,5 @@ export const cardEmotions: Record<string, "serene" | "fierce" | "sorrow" | "asce
   "18-moon": "sorrow",
   "19-sun": "serene",
   "20-judgement": "fierce",
-  "21-world": "serene"
+  "21-world": "serene",
 };

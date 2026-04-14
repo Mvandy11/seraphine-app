@@ -1,29 +1,25 @@
 import { useOracleContext } from "@/contexts/OracleContext";
 import { drawCard } from "@/utils/drawCard";
+import { cardEmotions } from "@/data/emotions";
 
 export default function OracleConsole() {
-  const { state, setQuestion, setAnswer, setPhase } = useOracleContext();
+  const { state, setQuestion, setAnswer, setPhase, setEmotion } =
+    useOracleContext();
 
   const handleAsk = async () => {
     if (!state.question.trim()) return;
 
     setPhase("drawing");
 
-    // Simulated async oracle response
     setTimeout(() => {
       const card = drawCard("major");
+      const emotion = cardEmotions[card.id];
+
+      setEmotion(emotion);
 
       const message = `Seraphine reveals **${card.name}**.`;
-
       setAnswer(message);
       setPhase("complete");
-
-      // Future expansions:
-      // - speak(message)
-      // - setEmotion(card)
-      // - setRevealedCard(card)
-      // - animateCardReveal(card)
-
     }, 1500);
   };
 

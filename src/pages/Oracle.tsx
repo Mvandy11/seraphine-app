@@ -1,34 +1,89 @@
-import React from "react";
 import { useOracleContext } from "@/contexts/OracleContext";
 import OracleConsole from "@/components/OracleConsole";
-import SeraphinePortrait from "@/components/SeraphinePortrait";
 
-const Oracle: React.FC = () => {
-  const { state } = useOracleContext();
+export default function Oracle() {
+  const { state, emotion } = useOracleContext();
+
+  const portrait = emotion
+    ? `/art/seraphine/emotion/${emotion}.png`
+    : `/art/seraphine/emotion/portrait.png`;
+
+  const bg =
+    emotion === "sorrow"
+      ? "/art/backgrounds/oracle.jpg"
+      : "/art/backgrounds/hero.jpg";
+
+  const aura =
+    emotion === "serene"
+      ? "radial-gradient(circle, rgba(124,58,237,0.2), transparent)"
+      : emotion === "fierce"
+      ? "radial-gradient(circle, rgba(255,0,80,0.25), transparent)"
+      : emotion === "sorrow"
+      ? "radial-gradient(circle, rgba(0,0,0,0.4), transparent)"
+      : emotion === "ascended"
+      ? "radial-gradient(circle, rgba(255,255,255,0.3), transparent)"
+      : "transparent";
 
   return (
     <div
       style={{
-        width: "100%",
+        position: "relative",
         minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        background: "radial-gradient(circle at top, #0f0a1f, #05030d)",
-        color: "white",
-        overflowX: "hidden",
-        paddingTop: "40px",
+        backgroundImage: `url(${bg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        transition: "0.8s ease",
+        padding: "40px 20px",
       }}
     >
-      {/* Cinematic Seraphine Portrait */}
-      <SeraphinePortrait />
+      {/* Aura Layer */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          background: aura,
+          transition: "0.8s ease",
+        }}
+      />
 
-      {/* Active Reading Console */}
-      <div style={{ width: "100%", maxWidth: "900px", marginTop: "40px" }}>
+      <div
+        style={{
+          position: "relative",
+          zIndex: 2,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "30px",
+        }}
+      >
+        <img
+          src={portrait}
+          alt="Seraphine"
+          style={{
+            width: "100%",
+            maxWidth: "420px",
+            transition: "0.6s ease",
+            filter: "drop-shadow(0 0 25px rgba(124,58,237,0.6))",
+          }}
+        />
+
         <OracleConsole />
+
+        {state.answer && (
+          <div
+            style={{
+              marginTop: "20px",
+              color: "white",
+              fontSize: "1.4rem",
+              textAlign: "center",
+              maxWidth: "600px",
+              textShadow: "0 0 10px rgba(0,0,0,0.6)",
+            }}
+            dangerouslySetInnerHTML={{ __html: state.answer }}
+          />
+        )}
       </div>
     </div>
   );
-};
-
-export default Oracle;
+}
