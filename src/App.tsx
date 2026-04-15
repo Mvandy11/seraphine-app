@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 
 import Header from "@/components/Header";
+import BottomNav from "@/components/BottomNav";
 import Oracle from "@/pages/Oracle";
 import ManageSubscription from "@/pages/ManageSubscription";
 import Subscribe from "@/pages/Subscribe";
@@ -22,6 +23,8 @@ export default function App() {
         <Route path="/readings" element={<SavedReadings />} />
         <Route path="/deck" element={<DeckMenu />} />
       </Routes>
+
+      <BottomNav />
     </>
   );
 }

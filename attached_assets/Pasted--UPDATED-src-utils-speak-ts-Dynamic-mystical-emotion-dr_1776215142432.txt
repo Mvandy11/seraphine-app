@@ -1,0 +1,226 @@
+⭐ UPDATED — /src/utils/speak.ts
+Dynamic, mystical, emotion‑driven voice engine
+------------------------------------------------------------
+ts
+// speak.ts — upgraded mystical voice engine
+
+export function speak(text: string, emotion?: string) {
+  if (!window.speechSynthesis) return;
+
+  const utter = new SpeechSynthesisUtterance();
+
+  // Add SSML‑style pacing manually
+  const mysticalText = text
+    .replace(/\. /g, "... ")
+    .replace(/,/g, ", ")
+    .replace(/:/g, " — ")
+    .replace(/;/g, " — ");
+
+  utter.text = mysticalText;
+
+  // Pick a female voice if available
+  const voices = speechSynthesis.getVoices();
+  const voice =
+    voices.find((v) => v.name.toLowerCase().includes("female")) ||
+    voices.find((v) => v.name.toLowerCase().includes("woman")) ||
+    voices.find((v) => v.name.toLowerCase().includes("zira")) ||
+    voices[0];
+
+  utter.voice = voice;
+
+  // Emotion physics → voice tuning
+  switch (emotion) {
+    case "serene":
+      utter.pitch = 1.25;
+      utter.rate = 0.92;
+      utter.volume = 0.95;
+      break;
+
+    case "fierce":
+      utter.pitch = 0.92;
+      utter.rate = 1.12;
+      utter.volume = 1.0;
+      break;
+
+    case "sorrow":
+      utter.pitch = 0.78;
+      utter.rate = 0.85;
+      utter.volume = 0.88;
+      break;
+
+    case "ascended":
+      utter.pitch = 1.35;
+      utter.rate = 0.97;
+      utter.volume = 0.92;
+      break;
+
+    default:
+      utter.pitch = 1.0;
+      utter.rate = 1.0;
+      utter.volume = 1.0;
+  }
+
+  // Add mystical pauses
+  utter.onstart = () => {
+    utter.text = mysticalText.replace(/…/g, "...");
+  };
+
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utter);
+}
+------------------------------------------------------------
+⭐ UPDATED — /src/pages/Oracle.tsx
+Adds Seraphine’s Fortune Reading Explanation
+Adds Deck Vault entry button
+------------------------------------------------------------
+tsx
+// Oracle.tsx — only the updated section around the answer
+
+{state.answer && (
+  <div
+    style={{
+      marginTop: "20px",
+      color: "white",
+      fontSize: "1.4rem",
+      textAlign: "center",
+      maxWidth: "650px",
+      textShadow: "0 0 10px rgba(0,0,0,0.6)",
+    }}
+  >
+    {/* Seraphine's raw answer */}
+    <div dangerouslySetInnerHTML={{ __html: state.answer }} />
+
+    {/* ⭐ NEW: Fortune Reading Explanation */}
+    <div
+      style={{
+        marginTop: "30px",
+        padding: "20px",
+        background: "rgba(255,255,255,0.05)",
+        borderRadius: "12px",
+        boxShadow: "0 0 20px rgba(124,58,237,0.4)",
+      }}
+    >
+      <h3
+        style={{
+          marginBottom: "10px",
+          fontSize: "1.6rem",
+          color: "white",
+          textShadow: "0 0 10px rgba(124,58,237,0.6)",
+        }}
+      >
+        Seraphine’s Explanation
+      </h3>
+
+      <p style={{ opacity: 0.9, marginBottom: "10px" }}>
+        <strong>Why this card appeared:</strong><br />
+        {state.explanation?.why}
+      </p>
+
+      <p style={{ opacity: 0.9, marginBottom: "10px" }}>
+        <strong>Symbolic meaning:</strong><br />
+        {state.explanation?.symbolism}
+      </p>
+
+      <p style={{ opacity: 0.9, marginBottom: "10px" }}>
+        <strong>How it relates to your question:</strong><br />
+        {state.explanation?.relation}
+      </p>
+
+      <p style={{ opacity: 0.9, marginBottom: "10px" }}>
+        <strong>Seraphine’s guidance:</strong><br />
+        {state.explanation?.guidance}
+      </p>
+    </div>
+
+    {/* Save Reading Button (unchanged) */}
+    <SaveReadingButton
+      type="oracle"
+      payload={{
+        question: state.question,
+        spread: state.spread,
+        emotion,
+        message: state.answer,
+      }}
+    />
+  </div>
+)}
+------------------------------------------------------------
+⭐ UPDATED — /src/components/CardOfTheDayPreview.tsx
+Adds “Explore the Deck Vault” button
+------------------------------------------------------------
+tsx
+<button
+  onClick={() => navigate("/deck")}
+  style={{
+    padding: "8px 16px",
+    background: "rgba(255,255,255,0.1)",
+    border: "1px solid rgba(255,255,255,0.2)",
+    borderRadius: "8px",
+    color: "white",
+    fontSize: "0.9rem",
+    cursor: "pointer",
+    marginTop: "6px",
+  }}
+>
+  Explore the Deck Vault
+</button>
+Place this under the “View Full Reading” button.
+
+------------------------------------------------------------
+⭐ NEW — /src/components/BottomNav.tsx
+Mobile bottom navigation bar
+------------------------------------------------------------
+tsx
+// BottomNav.tsx — mobile nav bar
+
+import { Link, useLocation } from "react-router-dom";
+
+export default function BottomNav() {
+  const { pathname } = useLocation();
+
+  const linkStyle = (path: string) => ({
+    flex: 1,
+    padding: "12px 0",
+    textAlign: "center" as const,
+    color: pathname === path ? "#7c3aed" : "white",
+    fontWeight: pathname === path ? "bold" : "normal",
+    textDecoration: "none",
+  });
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: "rgba(0,0,0,0.7)",
+        backdropFilter: "blur(6px)",
+        display: "flex",
+        borderTop: "1px solid rgba(255,255,255,0.1)",
+        zIndex: 999,
+      }}
+    >
+      <Link to="/oracle" style={linkStyle("/oracle")}>Oracle</Link>
+      <Link to="/card-of-the-day" style={linkStyle("/card-of-the-day")}>Daily</Link>
+      <Link to="/deck" style={linkStyle("/deck")}>Vault</Link>
+      <Link to="/readings" style={linkStyle("/readings")}>Readings</Link>
+    </div>
+  );
+}
+------------------------------------------------------------
+⭐ UPDATED — /src/App.tsx
+Adds Deck Vault to top‑right nav + bottom nav
+------------------------------------------------------------
+tsx
+// Add to your top navigation (desktop)
+<nav style={{ display: "flex", gap: "20px" }}>
+  <Link to="/oracle">Oracle</Link>
+  <Link to="/card-of-the-day">Daily</Link>
+  <Link to="/deck">Deck Vault</Link>
+  <Link to="/readings">Readings</Link>
+  <Link to="/subscribe">Subscribe</Link>
+</nav>
+
+// Add bottom nav (mobile)
+<BottomNav />

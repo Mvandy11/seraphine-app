@@ -22,9 +22,10 @@ const Header: React.FC = () => {
       </Link>
 
       <nav style={{ display: "flex", gap: "20px", alignItems: "center" }}>
-        <Link to="/oracle" style={{ color: "white" }}>
-          Oracle
-        </Link>
+        <Link to="/oracle" style={{ color: "white" }}>Oracle</Link>
+        <Link to="/card-of-the-day" style={{ color: "white" }}>Daily</Link>
+        <Link to="/deck" style={{ color: "white" }}>Deck Vault</Link>
+        <Link to="/readings" style={{ color: "white" }}>Readings</Link>
 
         {user && (
           <Link to="/manage" style={{ color: "white" }}>
@@ -57,4 +58,3 @@ const Header: React.FC = () => {
 };
 
 export default Header;
-

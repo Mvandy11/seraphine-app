@@ -1,8 +1,3 @@
-// ------------------------------------------------------------
-// ⭐ UPDATED — /src/pages/Oracle.tsx
-// (add SaveReadingButton under answer)
-// ------------------------------------------------------------
-
 import { useOracleContext } from "@/contexts/OracleContext";
 import OracleConsole from "@/components/OracleConsole";
 import CardOfTheDayPreview from "@/components/CardOfTheDayPreview";
@@ -92,15 +87,59 @@ export default function Oracle() {
               color: "white",
               fontSize: "1.4rem",
               textAlign: "center",
-              maxWidth: "600px",
+              maxWidth: "650px",
               textShadow: "0 0 10px rgba(0,0,0,0.6)",
             }}
           >
-            <div
-              dangerouslySetInnerHTML={{
-                __html: state.answer,
-              }}
-            />
+            <div dangerouslySetInnerHTML={{ __html: state.answer }} />
+
+            {state.explanation && (
+              <div
+                style={{
+                  marginTop: "30px",
+                  padding: "20px",
+                  background: "rgba(255,255,255,0.05)",
+                  borderRadius: "12px",
+                  boxShadow: "0 0 20px rgba(124,58,237,0.4)",
+                }}
+              >
+                <h3
+                  style={{
+                    marginBottom: "10px",
+                    fontSize: "1.6rem",
+                    color: "white",
+                    textShadow: "0 0 10px rgba(124,58,237,0.6)",
+                  }}
+                >
+                  Seraphine's Explanation
+                </h3>
+
+                <p style={{ opacity: 0.9, marginBottom: "10px" }}>
+                  <strong>Why this card appeared:</strong>
+                  <br />
+                  {state.explanation?.why}
+                </p>
+
+                <p style={{ opacity: 0.9, marginBottom: "10px" }}>
+                  <strong>Symbolic meaning:</strong>
+                  <br />
+                  {state.explanation?.symbolism}
+                </p>
+
+                <p style={{ opacity: 0.9, marginBottom: "10px" }}>
+                  <strong>How it relates to your question:</strong>
+                  <br />
+                  {state.explanation?.relation}
+                </p>
+
+                <p style={{ opacity: 0.9, marginBottom: "10px" }}>
+                  <strong>Seraphine's guidance:</strong>
+                  <br />
+                  {state.explanation?.guidance}
+                </p>
+              </div>
+            )}
+
             <SaveReadingButton
               type="oracle"
               payload={{

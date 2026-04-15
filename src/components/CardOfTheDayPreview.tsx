@@ -53,6 +53,22 @@ export default function CardOfTheDayPreview() {
       >
         View Full Reading
       </button>
+
+      <button
+        onClick={() => navigate("/deck")}
+        style={{
+          padding: "8px 16px",
+          background: "rgba(255,255,255,0.1)",
+          border: "1px solid rgba(255,255,255,0.2)",
+          borderRadius: "8px",
+          color: "white",
+          fontSize: "0.9rem",
+          cursor: "pointer",
+          marginTop: "6px",
+        }}
+      >
+        Explore the Deck Vault
+      </button>
     </div>
   );
 }
