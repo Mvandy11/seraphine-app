@@ -1,7 +1,13 @@
+// ------------------------------------------------------------
+// ⭐ UPDATED — /src/pages/Oracle.tsx
+// (add SaveReadingButton under answer)
+// ------------------------------------------------------------
+
 import { useOracleContext } from "@/contexts/OracleContext";
 import OracleConsole from "@/components/OracleConsole";
 import CardOfTheDayPreview from "@/components/CardOfTheDayPreview";
 import CardReveal from "@/components/CardReveal";
+import SaveReadingButton from "@/components/SaveReadingButton";
 
 export default function Oracle() {
   const { state } = useOracleContext();
@@ -87,9 +93,24 @@ export default function Oracle() {
               fontSize: "1.4rem",
               textAlign: "center",
               maxWidth: "600px",
+              textShadow: "0 0 10px rgba(0,0,0,0.6)",
             }}
-            dangerouslySetInnerHTML={{ __html: state.answer }}
-          />
+          >
+            <div
+              dangerouslySetInnerHTML={{
+                __html: state.answer,
+              }}
+            />
+            <SaveReadingButton
+              type="oracle"
+              payload={{
+                question: state.question,
+                spread: state.spread,
+                emotion,
+                message: state.answer,
+              }}
+            />
+          </div>
         )}
       </div>
     </div>

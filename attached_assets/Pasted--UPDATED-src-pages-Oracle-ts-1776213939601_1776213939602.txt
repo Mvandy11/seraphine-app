@@ -1,0 +1,117 @@
+// ------------------------------------------------------------
+// ⭐ UPDATED — /src/pages/Oracle.tsx
+// (add SaveReadingButton under answer)
+// ------------------------------------------------------------
+
+import { useOracleContext } from "@/contexts/OracleContext";
+import OracleConsole from "@/components/OracleConsole";
+import CardOfTheDayPreview from "@/components/CardOfTheDayPreview";
+import CardReveal from "@/components/CardReveal";
+import SaveReadingButton from "@/components/SaveReadingButton";
+
+export default function Oracle() {
+  const { state, emotion } = useOracleContext();
+
+  const portrait = emotion
+    ? `/art/seraphine/emotion/${emotion}.png`
+    : `/art/seraphine/emotion/portrait.png`;
+
+  const bg =
+    emotion === "sorrow"
+      ? "/art/backgrounds/oracle.jpg"
+      : "/art/backgrounds/hero.jpg";
+
+  const aura =
+    emotion === "serene"
+      ? "radial-gradient(circle, rgba(124,58,237,0.2), transparent)"
+      : emotion === "fierce"
+      ? "radial-gradient(circle, rgba(255,0,80,0.25), transparent)"
+      : emotion === "sorrow"
+      ? "radial-gradient(circle, rgba(0,0,0,0.4), transparent)"
+      : emotion === "ascended"
+      ? "radial-gradient(circle, rgba(255,255,255,0.3), transparent)"
+      : "transparent";
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        minHeight: "100vh",
+        backgroundImage: `url(${bg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        padding: "40px 20px",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: aura,
+          pointerEvents: "none",
+        }}
+      />
+
+      <div
+        style={{
+          position: "relative",
+          zIndex: 2,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "30px",
+        }}
+      >
+        <CardOfTheDayPreview />
+
+        <img
+          src={portrait}
+          alt="Seraphine"
+          style={{
+            width: "100%",
+            maxWidth: "420px",
+            filter: "drop-shadow(0 0 25px rgba(124,58,237,0.6))",
+          }}
+        />
+
+        {state.spread && (
+          <div style={{ display: "flex", gap: "20px" }}>
+            {state.spread.map((card, i) => (
+              <CardReveal key={i} card={card} />
+            ))}
+          </div>
+        )}
+
+        <OracleConsole />
+
+        {state.answer && (
+          <div
+            style={{
+              marginTop: "20px",
+              color: "white",
+              fontSize: "1.4rem",
+              textAlign: "center",
+              maxWidth: "600px",
+              textShadow: "0 0 10px rgba(0,0,0,0.6)",
+            }}
+          >
+            <div
+              dangerouslySetInnerHTML={{
+                __html: state.answer,
+              }}
+            />
+            <SaveReadingButton
+              type="oracle"
+              payload={{
+                question: state.question,
+                spread: state.spread,
+                emotion,
+                message: state.answer,
+              }}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
