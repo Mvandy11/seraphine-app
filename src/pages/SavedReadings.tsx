@@ -1,0 +1,105 @@
+// ------------------------------------------------------------
+// ⭐ NEW FILE — /src/pages/SavedReadings.tsx
+// ------------------------------------------------------------
+
+import { getSavedReadings } from "@/utils/savedReadings";
+
+export default function SavedReadings() {
+  const readings = getSavedReadings();
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        padding: "40px 20px",
+        background: "radial-gradient(circle at top, #1e1b4b, #020617)",
+        color: "white",
+      }}
+    >
+      <h1
+        style={{
+          fontSize: "2rem",
+          marginBottom: "20px",
+          textAlign: "center",
+          textShadow: "0 0 10px rgba(0,0,0,0.6)",
+        }}
+      >
+        Saved Readings
+      </h1>
+
+      {readings.length === 0 && (
+        <p style={{ textAlign: "center", opacity: 0.8 }}>
+          No readings saved yet.
+        </p>
+      )}
+
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+          maxWidth: "800px",
+          margin: "0 auto",
+        }}
+      >
+        {readings.map((r) => (
+          <div
+            key={r.id}
+            style={{
+              padding: "16px",
+              borderRadius: "12px",
+              background: "rgba(15,23,42,0.9)",
+              boxShadow: "0 0 20px rgba(15,23,42,0.8)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: "8px",
+                fontSize: "0.9rem",
+                opacity: 0.8,
+              }}
+            >
+              <span>{r.type === "daily" ? "Card of the Day" : "Oracle Reading"}</span>
+              <span>{r.date}</span>
+            </div>
+
+            {r.question && (
+              <div
+                style={{
+                  marginBottom: "8px",
+                  fontStyle: "italic",
+                  opacity: 0.9,
+                }}
+              >
+                "{r.question}"
+              </div>
+            )}
+
+            <div style={{ marginBottom: "8px" }}>{r.message}</div>
+
+            {r.card && r.card.name && (
+              <div style={{ fontSize: "0.95rem", opacity: 0.9 }}>
+                Card: <strong>{r.card.name}</strong>
+              </div>
+            )}
+
+            {r.spread && r.spread.length > 0 && (
+              <div
+                style={{
+                  marginTop: "6px",
+                  fontSize: "0.9rem",
+                  opacity: 0.9,
+                }}
+              >
+                Spread:{" "}
+                {r.spread.map((c: any, i: number) => c.name || c.id || `Card ${i + 1}`).join(", ")}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
