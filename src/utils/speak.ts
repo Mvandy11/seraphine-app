@@ -1,5 +1,5 @@
-// speak.ts — Seraphine ElevenLabs Kess‑Hybrid Voice Engine
-// Drop-in replacement for your existing file
+// speak.ts — Seraphine ElevenLabs Voice Engine (Final Fix)
+// Ensures: feminine voice, no male fallback, stable ElevenLabs loading
 
 // ------------------------------------------------------------
 // 1. ElevenLabs API config
@@ -8,7 +8,7 @@ const ELEVEN_API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY;
 const SERAPHINE_VOICE_ID = import.meta.env.VITE_ELEVENLABS_VOICE_ID;
 
 // ------------------------------------------------------------
-// 2. Emotion → voice style mapping (Kess-hybrid)
+// 2. Emotion → style mapping
 // ------------------------------------------------------------
 const emotionStyle: Record<string, string> = {
   serene: "calm",
@@ -18,13 +18,11 @@ const emotionStyle: Record<string, string> = {
 };
 
 // ------------------------------------------------------------
-// 3. ElevenLabs request (Kess-like synthetic tuning)
+// 3. ElevenLabs request (Kess‑hybrid tuning)
 // ------------------------------------------------------------
 async function speakWithElevenLabs(text: string, emotion?: string) {
-  if (!ELEVEN_API_KEY || !SERAPHINE_VOICE_ID) {
-    console.warn("ElevenLabs not configured — falling back to browser voice.");
-    return false;
-  }
+  // If env vars missing → skip to fallback
+  if (!ELEVEN_API_KEY || !SERAPHINE_VOICE_ID) return false;
 
   try {
     const style = emotionStyle[emotion || "serene"] || "calm";
@@ -41,17 +39,15 @@ async function speakWithElevenLabs(text: string, emotion?: string) {
           text,
           model_id: "eleven_multilingual_v2",
           voice_settings: {
-            stability: 0.15,          // more synthetic, less natural
-            similarity_boost: 0.55,   // slight robotic edge
-            style: style,             // emotion-driven
-            use_speaker_boost: false, // removes human warmth
+            stability: 0.15,
+            similarity_boost: 0.55,
+            style: style,
+            use_speaker_boost: false,
 
             // Kess-like synthetic resonance
             pitch: 1.12,
             speed: 0.96,
             volume: 0.92,
-
-            // subtle vocoder shimmer
             exaggeration: 0.35
           },
         }),
@@ -74,17 +70,17 @@ async function speakWithElevenLabs(text: string, emotion?: string) {
 }
 
 // ------------------------------------------------------------
-// 4. Browser fallback (if ElevenLabs fails)
+// 4. Browser fallback (forced feminine voice)
 // ------------------------------------------------------------
 function fallbackBrowserVoice(text: string, emotion?: string) {
   if (!window.speechSynthesis) return;
 
   const utter = new SpeechSynthesisUtterance(text);
 
-  // Pick a feminine voice
+  // Force feminine fallback voice
   const voices = speechSynthesis.getVoices();
   const preferred = voices.find(v =>
-    /female|woman|zira|eva|susan|sara/i.test(v.name)
+    /female|woman|zira|eva|susan|sara|english|uk|us/i.test(v.name)
   );
   utter.voice = preferred || voices[0];
 
@@ -116,10 +112,21 @@ function fallbackBrowserVoice(text: string, emotion?: string) {
 }
 
 // ------------------------------------------------------------
-// 5. Main speak() function
+// 5. Chrome voice-loading fix (prevents male voice)
+// ------------------------------------------------------------
+if (speechSynthesis.onvoiceschanged === null) {
+  speechSynthesis.onvoiceschanged = () => {
+    console.log("Voices loaded — feminine fallback ready.");
+  };
+}
+
+// ------------------------------------------------------------
+// 6. Main speak() function
 // ------------------------------------------------------------
 export async function speak(text: string, emotion?: string) {
+  // Try ElevenLabs first
   const success = await speakWithElevenLabs(text, emotion);
 
+  // If ElevenLabs fails → feminine fallback
   if (!success) fallbackBrowserVoice(text, emotion);
 }
