@@ -2,8 +2,13 @@ import { useOracleContext } from "@/contexts/OracleContext";
 import { drawSpread } from "@/utils/drawSpread";
 import { cardEmotions } from "@/data/emotions";
 import { speak } from "@/utils/speak";
+import { BirthdayArchetype, buildBirthdayPromptContext } from "@/utils/birthdayEngine";
 
-export default function OracleConsole() {
+interface OracleConsoleProps {
+  birthday?: BirthdayArchetype | null;
+}
+
+export default function OracleConsole({ birthday }: OracleConsoleProps) {
   const {
     state,
     setQuestion,
@@ -29,7 +34,13 @@ export default function OracleConsole() {
       setEmotion(emotion);
       setSpread(spread);
 
-      const message = `Seraphine reveals a three‑card spread. The central force is **${mainCard.name}**.`;
+      const birthdayContext = buildBirthdayPromptContext(birthday ?? null);
+
+      let message = `Seraphine reveals a three‑card spread. The central force is **${mainCard.name}**.`;
+
+      if (birthdayContext) {
+        message += ` Seen through the lens of your Life Path ${birthday!.lifePath} and the aura of ${birthday!.elementalAura}, this card speaks directly to your soul's current chapter.`;
+      }
 
       setAnswer(message);
       setPhase("complete");

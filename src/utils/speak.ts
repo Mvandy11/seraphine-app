@@ -1,97 +1,125 @@
-// speak.ts — Seraphine's upgraded mystical voice engine
+// speak.ts — Seraphine ElevenLabs Kess‑Hybrid Voice Engine
+// Drop-in replacement for your existing file
 
 // ------------------------------------------------------------
-// 1. Strong feminine voice selection
+// 1. ElevenLabs API config
 // ------------------------------------------------------------
-function getSeraphineVoice() {
-  const voices = speechSynthesis.getVoices();
+const ELEVEN_API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY;
+const SERAPHINE_VOICE_ID = import.meta.env.VITE_ELEVENLABS_VOICE_ID;
 
-  // Stronger matching for feminine voices across browsers
-  const preferred = voices.find(v =>
-    /female|woman|zira|susan|eva|sara|english|uk|us/i.test(v.name)
-  );
+// ------------------------------------------------------------
+// 2. Emotion → voice style mapping (Kess-hybrid)
+// ------------------------------------------------------------
+const emotionStyle: Record<string, string> = {
+  serene: "calm",
+  fierce: "tense",
+  sorrow: "melancholic",
+  ascended: "mysterious"
+};
 
-  // Fallback: highest pitch voice available
-  const fallback = voices.sort((a, b) => (b.pitch || 1) - (a.pitch || 1))[0];
+// ------------------------------------------------------------
+// 3. ElevenLabs request (Kess-like synthetic tuning)
+// ------------------------------------------------------------
+async function speakWithElevenLabs(text: string, emotion?: string) {
+  if (!ELEVEN_API_KEY || !SERAPHINE_VOICE_ID) {
+    console.warn("ElevenLabs not configured — falling back to browser voice.");
+    return false;
+  }
 
-  return preferred || fallback || voices[0];
+  try {
+    const style = emotionStyle[emotion || "serene"] || "calm";
+
+    const response = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${SERAPHINE_VOICE_ID}`,
+      {
+        method: "POST",
+        headers: {
+          "xi-api-key": ELEVEN_API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text,
+          model_id: "eleven_multilingual_v2",
+          voice_settings: {
+            stability: 0.15,          // more synthetic, less natural
+            similarity_boost: 0.55,   // slight robotic edge
+            style: style,             // emotion-driven
+            use_speaker_boost: false, // removes human warmth
+
+            // Kess-like synthetic resonance
+            pitch: 1.12,
+            speed: 0.96,
+            volume: 0.92,
+
+            // subtle vocoder shimmer
+            exaggeration: 0.35
+          },
+        }),
+      }
+    );
+
+    if (!response.ok) throw new Error("ElevenLabs request failed");
+
+    const audioBlob = await response.blob();
+    const audioUrl = URL.createObjectURL(audioBlob);
+
+    const audio = new Audio(audioUrl);
+    audio.play();
+
+    return true;
+  } catch (err) {
+    console.error("ElevenLabs error:", err);
+    return false;
+  }
 }
 
 // ------------------------------------------------------------
-// 2. Main speak() function with emotional physics
+// 4. Browser fallback (if ElevenLabs fails)
 // ------------------------------------------------------------
-export function speak(text: string, emotion?: string) {
+function fallbackBrowserVoice(text: string, emotion?: string) {
   if (!window.speechSynthesis) return;
 
-  const utter = new SpeechSynthesisUtterance();
+  const utter = new SpeechSynthesisUtterance(text);
 
-  // Base mystical cadence
-  let mystical = text
-    .replace(/\. /g, "... ")
-    .replace(/,/g, ", ")
-    .replace(/:/g, " — ")
-    .replace(/;/g, " — ");
+  // Pick a feminine voice
+  const voices = speechSynthesis.getVoices();
+  const preferred = voices.find(v =>
+    /female|woman|zira|eva|susan|sara/i.test(v.name)
+  );
+  utter.voice = preferred || voices[0];
 
-  // ------------------------------------------------------------
-  // 3. Emotional physics → voice shaping
-  // ------------------------------------------------------------
+  // Emotional shaping
   switch (emotion) {
     case "serene":
-      utter.pitch = 1.35;
-      utter.rate = 0.88;
-      utter.volume = 0.95;
-      mystical = "… " + mystical.replace(/\./g, "…");
+      utter.pitch = 1.3;
+      utter.rate = 0.9;
       break;
-
     case "fierce":
-      utter.pitch = 0.92;
-      utter.rate = 1.18;
-      utter.volume = 1.0;
-      mystical = mystical.replace(/,/g, " —");
+      utter.pitch = 0.9;
+      utter.rate = 1.15;
       break;
-
     case "sorrow":
       utter.pitch = 0.75;
-      utter.rate = 0.82;
-      utter.volume = 0.85;
-      mystical = mystical.replace(/ /g, "  ");
+      utter.rate = 0.85;
       break;
-
     case "ascended":
       utter.pitch = 1.45;
       utter.rate = 0.95;
-      utter.volume = 0.9;
-      mystical = mystical
-        .replace(/a/g, "aa")
-        .replace(/e/g, "ee")
-        .replace(/o/g, "oo");
       break;
-
     default:
       utter.pitch = 1.0;
       utter.rate = 1.0;
-      utter.volume = 1.0;
   }
 
-  utter.text = mystical;
-
-  // ------------------------------------------------------------
-  // 4. Apply feminine voice
-  // ------------------------------------------------------------
-  utter.voice = getSeraphineVoice();
-
-  // ------------------------------------------------------------
-  // 5. Chrome voice-loading fix
-  // ------------------------------------------------------------
-  if (speechSynthesis.onvoiceschanged === null) {
-    speechSynthesis.onvoiceschanged = () => {
-      console.log("Seraphine voices loaded");
-    };
-  }
-
-  // ------------------------------------------------------------
-  // 6. Speak
-  // ------------------------------------------------------------
   speechSynthesis.cancel();
   speechSynthesis.speak(utter);
+}
+
+// ------------------------------------------------------------
+// 5. Main speak() function
+// ------------------------------------------------------------
+export async function speak(text: string, emotion?: string) {
+  const success = await speakWithElevenLabs(text, emotion);
+
+  if (!success) fallbackBrowserVoice(text, emotion);
 }

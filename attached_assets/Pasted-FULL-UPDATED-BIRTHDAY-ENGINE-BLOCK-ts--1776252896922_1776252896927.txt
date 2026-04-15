@@ -1,0 +1,158 @@
+FULL UPDATED BIRTHDAY ENGINE BLOCK
+ts
+// ------------------------------------------------------------
+// FILE: /src/utils/birthdayEngine.ts
+// Seraphine's Birthday → Archetype Engine
+// ------------------------------------------------------------
+
+export function calculateLifePath(month: number, day: number): number {
+  const sumDigits = (n: number): number =>
+    n < 10 ? n : sumDigits(n.toString().split("").reduce((a, b) => a + Number(b), 0));
+
+  return sumDigits(month + day);
+}
+
+export function getElementalAura(month: number): string {
+  if (month === 12 || month === 1 || month === 2) return "Winter / Shadow";
+  if (month >= 3 && month <= 5) return "Spring / Growth";
+  if (month >= 6 && month <= 8) return "Summer / Fire";
+  return "Autumn / Wisdom";
+}
+
+const majorArcana = [
+  "The Magician", "The High Priestess", "The Empress", "The Emperor",
+  "The Hierophant", "The Lovers", "The Chariot", "Strength",
+  "The Hermit", "Wheel of Fortune", "Justice", "The Hanged Man",
+  "Death", "Temperance", "The Devil", "The Tower",
+  "The Star", "The Moon", "The Sun", "Judgement", "The World", "The Fool"
+];
+
+export function getBirthArcana(day: number): string {
+  const index = (day - 1) % majorArcana.length;
+  return majorArcana[index];
+}
+
+export function generateArchetypeSummary(lifePath: number, aura: string, arcana: string) {
+  return `
+Your path number is **${lifePath}**, shaping your inner rhythm and emotional gravity.
+Your elemental aura is **${aura}**, influencing how energy moves through your life.
+Your birth arcana is **${arcana}**, the mythic force that shadows your destiny.
+  `.trim();
+}
+
+export function getBirthdayArchetype(month: number, day: number) {
+  const lifePath = calculateLifePath(month, day);
+  const elementalAura = getElementalAura(month);
+  const birthArcana = getBirthArcana(day);
+
+  return {
+    lifePath,
+    elementalAura,
+    birthArcana,
+    summary: generateArchetypeSummary(lifePath, elementalAura, birthArcana)
+  };
+}
+⭐ BIRTHDAY INPUT COMPONENT (drop‑in UI)
+Place this in:
+
+Code
+/src/components/BirthdayInput.tsx
+tsx
+import { useState } from "react";
+
+export default function BirthdayInput({ onSubmit }) {
+  const [month, setMonth] = useState("");
+  const [day, setDay] = useState("");
+
+  return (
+    <div style={{ marginTop: "20px", textAlign: "center" }}>
+      <h3 style={{ color: "white", marginBottom: "10px" }}>
+        Enter Your Birthday
+      </h3>
+
+      <input
+        type="number"
+        placeholder="Month (1–12)"
+        value={month}
+        onChange={(e) => setMonth(e.target.value)}
+        style={{
+          padding: "10px",
+          marginRight: "10px",
+          borderRadius: "6px",
+          width: "120px"
+        }}
+      />
+
+      <input
+        type="number"
+        placeholder="Day (1–31)"
+        value={day}
+        onChange={(e) => setDay(e.target.value)}
+        style={{
+          padding: "10px",
+          borderRadius: "6px",
+          width: "120px"
+        }}
+      />
+
+      <button
+        onClick={() => onSubmit(Number(month), Number(day))}
+        style={{
+          marginTop: "15px",
+          padding: "10px 20px",
+          borderRadius: "8px",
+          background: "#7c3aed",
+          color: "white",
+          cursor: "pointer",
+          display: "block",
+          marginLeft: "auto",
+          marginRight: "auto"
+        }}
+      >
+        Save Birthday
+      </button>
+    </div>
+  );
+}
+⭐ HOW TO CONNECT IT TO SERAPHINE (Oracle.tsx)
+Add this near the top of your Oracle page:
+
+tsx
+import BirthdayInput from "../components/BirthdayInput";
+import { getBirthdayArchetype } from "../utils/birthdayEngine";
+Add this to your component state:
+
+tsx
+const [birthday, setBirthday] = useState(null);
+Add the input UI:
+
+tsx
+<BirthdayInput
+  onSubmit={(month, day) => {
+    const archetype = getBirthdayArchetype(month, day);
+    setBirthday(archetype);
+  }}
+/>
+⭐ PASS BIRTHDAY INTO SERAPHINE’S READING REQUEST
+Where you send your Oracle request to Supabase / your function, add:
+
+ts
+body: JSON.stringify({
+  question: state.question,
+  spread: state.spread,
+  birthday: birthday, // ⭐ added
+})
+⭐ HOW SERAPHINE USES IT IN THE PROMPT
+Inside your Supabase function (or wherever you assemble the AI prompt), add:
+
+ts
+birthdayContext: birthday
+  ? `
+User Birthday Archetype:
+- Life Path: ${birthday.lifePath}
+- Elemental Aura: ${birthday.elementalAura}
+- Birth Arcana: ${birthday.birthArcana}
+
+Interpret the reading through this lens.
+`
+  : "",
