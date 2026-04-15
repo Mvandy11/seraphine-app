@@ -5,6 +5,7 @@ import Oracle from "@/pages/Oracle";
 import ManageSubscription from "@/pages/ManageSubscription";
 import Subscribe from "@/pages/Subscribe";
 import CardOfTheDay from "@/pages/CardOfTheDay";
+import SavedReadings from "@/pages/SavedReadings";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/manage" element={<ManageSubscription />} />
         <Route path="/subscribe" element={<Subscribe />} />
         <Route path="/card-of-the-day" element={<CardOfTheDay />} />
+        <Route path="/readings" element={<SavedReadings />} />
       </Routes>
     </>
   );
