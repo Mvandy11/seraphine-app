@@ -8,20 +8,19 @@ const ELEVEN_API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY;
 const SERAPHINE_VOICE_ID = import.meta.env.VITE_ELEVENLABS_VOICE_ID;
 
 // ------------------------------------------------------------
-// 2. Emotion → style mapping
+// 2. Emotion → style mapping (numeric 0.0–1.0 per ElevenLabs spec)
 // ------------------------------------------------------------
-const emotionStyle: Record<string, string> = {
-  serene: "calm",
-  fierce: "tense",
-  sorrow: "melancholic",
-  ascended: "mysterious"
+const emotionStyle: Record<string, number> = {
+  serene: 0.2,
+  fierce: 0.75,
+  sorrow: 0.1,
+  ascended: 0.5,
 };
 
 // ------------------------------------------------------------
-// 3. ElevenLabs request (Kess‑hybrid tuning)
+// 3. ElevenLabs request (clean + compatible)
 // ------------------------------------------------------------
 async function speakWithElevenLabs(text: string, emotion?: string) {
-  // If env vars missing → skip to fallback
   if (!ELEVEN_API_KEY || !SERAPHINE_VOICE_ID) return false;
 
   try {
@@ -37,19 +36,13 @@ async function speakWithElevenLabs(text: string, emotion?: string) {
         },
         body: JSON.stringify({
           text,
-          model_id: "eleven_multilingual_v2",
+          model_id: "eleven_turbo_v2",
           voice_settings: {
             stability: 0.15,
             similarity_boost: 0.55,
             style: style,
-            use_speaker_boost: false,
-
-            // Kess-like synthetic resonance
-            pitch: 1.12,
-            speed: 0.96,
-            volume: 0.92,
-            exaggeration: 0.35
-          },
+            use_speaker_boost: false
+          }
         }),
       }
     );
@@ -77,14 +70,12 @@ function fallbackBrowserVoice(text: string, emotion?: string) {
 
   const utter = new SpeechSynthesisUtterance(text);
 
-  // Force feminine fallback voice
   const voices = speechSynthesis.getVoices();
   const preferred = voices.find(v =>
     /female|woman|zira|eva|susan|sara|english|uk|us/i.test(v.name)
   );
   utter.voice = preferred || voices[0];
 
-  // Emotional shaping
   switch (emotion) {
     case "serene":
       utter.pitch = 1.3;
@@ -112,7 +103,7 @@ function fallbackBrowserVoice(text: string, emotion?: string) {
 }
 
 // ------------------------------------------------------------
-// 5. Chrome voice-loading fix (prevents male voice)
+// 5. Chrome voice-loading fix
 // ------------------------------------------------------------
 if (speechSynthesis.onvoiceschanged === null) {
   speechSynthesis.onvoiceschanged = () => {
@@ -124,9 +115,6 @@ if (speechSynthesis.onvoiceschanged === null) {
 // 6. Main speak() function
 // ------------------------------------------------------------
 export async function speak(text: string, emotion?: string) {
-  // Try ElevenLabs first
   const success = await speakWithElevenLabs(text, emotion);
-
-  // If ElevenLabs fails → feminine fallback
   if (!success) fallbackBrowserVoice(text, emotion);
 }
