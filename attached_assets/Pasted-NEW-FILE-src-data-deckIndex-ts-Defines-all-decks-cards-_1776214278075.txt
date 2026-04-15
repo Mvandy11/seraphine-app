@@ -1,0 +1,359 @@
+NEW FILE — /src/data/deckIndex.ts
+(Defines all decks, cards, images, and emotional tags)
+------------------------------------------------------------
+ts
+// deckIndex.ts
+// Expand this as you add more decks or card art.
+
+export interface DeckCard {
+  id: string;
+  name: string;
+  image: string;
+  emotion: "serene" | "fierce" | "sorrow" | "ascended";
+}
+
+export interface DeckDefinition {
+  id: string;
+  name: string;
+  cards: DeckCard[];
+}
+
+export const decks: DeckDefinition[] = [
+  {
+    id: "major",
+    name: "Major Arcana",
+    cards: [
+      {
+        id: "the_fool",
+        name: "The Fool",
+        image: "/cards/major/the_fool.jpg",
+        emotion: "serene",
+      },
+      {
+        id: "the_magician",
+        name: "The Magician",
+        image: "/cards/major/the_magician.jpg",
+        emotion: "ascended",
+      },
+      {
+        id: "the_high_priestess",
+        name: "The High Priestess",
+        image: "/cards/major/the_high_priestess.jpg",
+        emotion: "sorrow",
+      },
+      {
+        id: "the_empress",
+        name: "The Empress",
+        image: "/cards/major/the_empress.jpg",
+        emotion: "serene",
+      },
+      // Add the rest of your Major Arcana here…
+    ],
+  },
+
+  {
+    id: "seraphine",
+    name: "Seraphine Deck",
+    cards: [
+      {
+        id: "seraphine_star",
+        name: "Star of Seraphine",
+        image: "/cards/seraphine/star.jpg",
+        emotion: "ascended",
+      },
+      {
+        id: "seraphine_veil",
+        name: "Veil of Echoes",
+        image: "/cards/seraphine/veil.jpg",
+        emotion: "sorrow",
+      },
+      // Add your custom mythic cards here…
+    ],
+  },
+];
+------------------------------------------------------------
+⭐ NEW FILE — /src/components/DeckSelector.tsx
+(Cinematic deck selector)
+------------------------------------------------------------
+tsx
+import { decks } from "@/data/deckIndex";
+
+export default function DeckSelector({
+  active,
+  onChange,
+}: {
+  active: string;
+  onChange: (id: string) => void;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        gap: "16px",
+        justifyContent: "center",
+        marginBottom: "30px",
+      }}
+    >
+      {decks.map((deck) => (
+        <button
+          key={deck.id}
+          onClick={() => onChange(deck.id)}
+          style={{
+            padding: "10px 20px",
+            borderRadius: "10px",
+            border: "1px solid rgba(255,255,255,0.2)",
+            background:
+              active === deck.id
+                ? "rgba(124,58,237,0.4)"
+                : "rgba(255,255,255,0.1)",
+            color: "white",
+            cursor: "pointer",
+            fontSize: "1rem",
+            boxShadow:
+              active === deck.id
+                ? "0 0 20px rgba(124,58,237,0.6)"
+                : "none",
+            transition: "0.2s ease",
+          }}
+        >
+          {deck.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+------------------------------------------------------------
+⭐ NEW FILE — /src/components/CardGrid.tsx
+(Floating relic‑card grid)
+------------------------------------------------------------
+tsx
+import { DeckCard } from "@/data/deckIndex";
+
+export default function CardGrid({
+  cards,
+  onSelect,
+}: {
+  cards: DeckCard[];
+  onSelect: (card: DeckCard) => void;
+}) {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+        gap: "30px",
+        padding: "20px",
+      }}
+    >
+      {cards.map((card) => (
+        <div
+          key={card.id}
+          onClick={() => onSelect(card)}
+          style={{
+            cursor: "pointer",
+            transform: "translateY(0px)",
+            transition: "0.3s ease",
+            position: "relative",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLDivElement).style.transform =
+              "translateY(-8px) scale(1.05)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLDivElement).style.transform =
+              "translateY(0px) scale(1)";
+          }}
+        >
+          <img
+            src={card.image}
+            alt={card.name}
+            style={{
+              width: "100%",
+              height: "240px",
+              objectFit: "cover",
+              borderRadius: "12px",
+              boxShadow: "0 0 25px rgba(124,58,237,0.5)",
+            }}
+          />
+          <div
+            style={{
+              marginTop: "10px",
+              textAlign: "center",
+              color: "white",
+              fontSize: "1.1rem",
+            }}
+          >
+            {card.name}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+------------------------------------------------------------
+⭐ NEW FILE — /src/components/CardModal.tsx
+(Cinematic flip + emotional‑physics meaning + voice)
+------------------------------------------------------------
+tsx
+import { DeckCard } from "@/data/deckIndex";
+import { speak } from "@/utils/speak";
+import CardReveal from "@/components/CardReveal";
+
+export default function CardModal({
+  card,
+  onClose,
+}: {
+  card: DeckCard | null;
+  onClose: () => void;
+}) {
+  if (!card) return null;
+
+  const meaning = {
+    serene: `A gentle current moves beneath your day. ${card.name} brings clarity, renewal, and quiet guidance.`,
+    fierce: `${card.name} rises with force. This is a moment of courage, action, and decisive motion.`,
+    sorrow: `${card.name} reveals a shadow asking to be acknowledged. Healing begins when you turn toward it.`,
+    ascended: `${card.name} opens a threshold. Destiny aligns, and the veil thins around your awakening.`,
+  }[card.emotion];
+
+  const aura =
+    card.emotion === "serene"
+      ? "rgba(124,58,237,0.3)"
+      : card.emotion === "fierce"
+      ? "rgba(255,0,80,0.3)"
+      : card.emotion === "sorrow"
+      ? "rgba(0,0,0,0.5)"
+      : "rgba(255,255,255,0.4)";
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.7)",
+        backdropFilter: "blur(6px)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 999,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "rgba(15,23,42,0.9)",
+          padding: "30px",
+          borderRadius: "20px",
+          boxShadow: `0 0 40px ${aura}`,
+          maxWidth: "500px",
+          textAlign: "center",
+        }}
+      >
+        <CardReveal card={card} />
+
+        <h2
+          style={{
+            color: "white",
+            marginTop: "20px",
+            fontSize: "1.8rem",
+          }}
+        >
+          {card.name}
+        </h2>
+
+        <p
+          style={{
+            color: "white",
+            opacity: 0.9,
+            marginTop: "10px",
+            fontSize: "1.2rem",
+          }}
+        >
+          {meaning}
+        </p>
+
+        <button
+          onClick={() => speak(meaning, card.emotion)}
+          style={{
+            marginTop: "20px",
+            padding: "10px 20px",
+            background: "#7c3aed",
+            border: "none",
+            borderRadius: "8px",
+            color: "white",
+            cursor: "pointer",
+          }}
+        >
+          Hear Seraphine Speak
+        </button>
+      </div>
+    </div>
+  );
+}
+------------------------------------------------------------
+⭐ NEW FILE — /src/pages/DeckMenu.tsx
+(The full Mythic Vault)
+------------------------------------------------------------
+tsx
+import { useState } from "react";
+import { decks, DeckCard } from "@/data/deckIndex";
+import DeckSelector from "@/components/DeckSelector";
+import CardGrid from "@/components/CardGrid";
+import CardModal from "@/components/CardModal";
+
+export default function DeckMenu() {
+  const [activeDeck, setActiveDeck] = useState("major");
+  const [selectedCard, setSelectedCard] = useState<DeckCard | null>(null);
+
+  const deck = decks.find((d) => d.id === activeDeck)!;
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        backgroundImage: "url(/art/backgrounds/vault.jpg)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        padding: "40px 20px",
+        position: "relative",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "radial-gradient(circle at center, rgba(124,58,237,0.15), transparent)",
+          pointerEvents: "none",
+        }}
+      />
+
+      <div style={{ position: "relative", zIndex: 2 }}>
+        <h1
+          style={{
+            textAlign: "center",
+            color: "white",
+            fontSize: "2.4rem",
+            marginBottom: "20px",
+            textShadow: "0 0 20px rgba(124,58,237,0.6)",
+          }}
+        >
+          The Mythic Vault
+        </h1>
+
+        <DeckSelector active={activeDeck} onChange={setActiveDeck} />
+
+        <CardGrid cards={deck.cards} onSelect={setSelectedCard} />
+
+        <CardModal card={selectedCard} onClose={() => setSelectedCard(null)} />
+      </div>
+    </div>
+  );
+}
+------------------------------------------------------------
+⭐ UPDATED — Router (App.tsx or Routes.tsx)
+------------------------------------------------------------
+tsx
+import DeckMenu from "@/pages/DeckMenu";
+
+<Route path="/deck" element={<DeckMenu />} />
