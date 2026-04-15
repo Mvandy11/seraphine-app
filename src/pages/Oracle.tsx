@@ -1,5 +1,6 @@
 import { useOracleContext } from "@/contexts/OracleContext";
 import OracleConsole from "@/components/OracleConsole";
+import CardOfTheDayPreview from "@/components/CardOfTheDayPreview";
 import CardReveal from "@/components/CardReveal";
 
 export default function Oracle() {
@@ -34,7 +35,6 @@ export default function Oracle() {
         backgroundImage: `url(${bg})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
-        transition: "0.8s ease",
         padding: "40px 20px",
       }}
     >
@@ -42,9 +42,8 @@ export default function Oracle() {
         style={{
           position: "absolute",
           inset: 0,
-          pointerEvents: "none",
           background: aura,
-          transition: "0.8s ease",
+          pointerEvents: "none",
         }}
       />
 
@@ -58,25 +57,20 @@ export default function Oracle() {
           gap: "30px",
         }}
       >
+        <CardOfTheDayPreview />
+
         <img
           src={portrait}
           alt="Seraphine"
           style={{
             width: "100%",
             maxWidth: "420px",
-            transition: "0.6s ease",
             filter: "drop-shadow(0 0 25px rgba(124,58,237,0.6))",
           }}
         />
 
         {state.spread && (
-          <div
-            style={{
-              display: "flex",
-              gap: "20px",
-              marginTop: "20px",
-            }}
-          >
+          <div style={{ display: "flex", gap: "20px" }}>
             {state.spread.map((card, i) => (
               <CardReveal key={i} card={card} />
             ))}
@@ -93,7 +87,6 @@ export default function Oracle() {
               fontSize: "1.4rem",
               textAlign: "center",
               maxWidth: "600px",
-              textShadow: "0 0 10px rgba(0,0,0,0.6)",
             }}
             dangerouslySetInnerHTML={{ __html: state.answer }}
           />

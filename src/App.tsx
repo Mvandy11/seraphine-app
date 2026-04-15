@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Oracle from "@/pages/Oracle";
 import ManageSubscription from "@/pages/ManageSubscription";
 import Subscribe from "@/pages/Subscribe";
+import CardOfTheDay from "@/pages/CardOfTheDay";
 
 export default function App() {
   return (
@@ -15,14 +16,8 @@ export default function App() {
         <Route path="/oracle" element={<Oracle />} />
         <Route path="/manage" element={<ManageSubscription />} />
         <Route path="/subscribe" element={<Subscribe />} />
+        <Route path="/card-of-the-day" element={<CardOfTheDay />} />
       </Routes>
     </>
   );
 }
-
-
-
-
-
-
-

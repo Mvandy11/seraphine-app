@@ -1,0 +1,360 @@
+NEW FILE — /src/hooks/useDailyCard.ts
+------------------------------------------------------------
+ts
+import { useEffect, useState } from "react";
+import { drawCard } from "@/utils/drawCard";
+import { cardEmotions } from "@/data/emotions";
+
+export function useDailyCard() {
+  const [daily, setDaily] = useState<any>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("dailyCard");
+    const today = new Date().toISOString().split("T")[0];
+
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed.date === today) {
+        setDaily(parsed);
+        return;
+      }
+    }
+
+    const card = drawCard("major");
+    const emotion = cardEmotions[card.id];
+    const message = `Seraphine reveals ${card.name} as your guiding force today.`;
+
+    const payload = {
+      date: today,
+      card,
+      emotion,
+      message,
+    };
+
+    localStorage.setItem("dailyCard", JSON.stringify(payload));
+    setDaily(payload);
+  }, []);
+
+  return daily;
+}
+------------------------------------------------------------
+⭐ NEW FILE — /src/components/CardOfTheDayPreview.tsx
+------------------------------------------------------------
+tsx
+import { useDailyCard } from "@/hooks/useDailyCard";
+import { useNavigate } from "react-router-dom";
+import CardReveal from "@/components/CardReveal";
+
+export default function CardOfTheDayPreview() {
+  const daily = useDailyCard();
+  const navigate = useNavigate();
+
+  if (!daily) return null;
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        padding: "20px",
+        marginBottom: "20px",
+        background: "rgba(0,0,0,0.35)",
+        borderRadius: "16px",
+        boxShadow: "0 0 25px rgba(124,58,237,0.4)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "16px",
+      }}
+    >
+      <h2
+        style={{
+          color: "white",
+          fontSize: "1.6rem",
+          margin: 0,
+          textShadow: "0 0 10px rgba(0,0,0,0.6)",
+        }}
+      >
+        Today’s Card
+      </h2>
+
+      <div style={{ transform: "scale(0.8)" }}>
+        <CardReveal card={daily.card} />
+      </div>
+
+      <button
+        onClick={() => navigate("/card-of-the-day")}
+        style={{
+          padding: "10px 20px",
+          background: "#7c3aed",
+          border: "none",
+          borderRadius: "8px",
+          color: "white",
+          fontSize: "1rem",
+          cursor: "pointer",
+          boxShadow: "0 0 15px rgba(124,58,237,0.5)",
+        }}
+      >
+        View Full Reading
+      </button>
+    </div>
+  );
+}
+------------------------------------------------------------
+⭐ NEW FILE — /src/pages/CardOfTheDay.tsx
+------------------------------------------------------------
+tsx
+import { useDailyCard } from "@/hooks/useDailyCard";
+import { speak } from "@/utils/speak";
+import { useOracleContext } from "@/contexts/OracleContext";
+import CardReveal from "@/components/CardReveal";
+
+export default function CardOfTheDay() {
+  const daily = useDailyCard();
+  const { state } = useOracleContext();
+
+  if (!daily) return null;
+
+  const { card, emotion, message } = daily;
+
+  const aura =
+    emotion === "serene"
+      ? "radial-gradient(circle, rgba(124,58,237,0.2), transparent)"
+      : emotion === "fierce"
+      ? "radial-gradient(circle, rgba(255,0,80,0.25), transparent)"
+      : emotion === "sorrow"
+      ? "radial-gradient(circle, rgba(0,0,0,0.4), transparent)"
+      : "radial-gradient(circle, rgba(255,255,255,0.3), transparent)";
+
+  const bg =
+    emotion === "sorrow"
+      ? "/art/backgrounds/oracle.jpg"
+      : "/art/backgrounds/hero.jpg";
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        minHeight: "100vh",
+        backgroundImage: `url(${bg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        padding: "40px 20px",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: aura,
+          pointerEvents: "none",
+        }}
+      />
+
+      <div
+        style={{
+          position: "relative",
+          zIndex: 2,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "30px",
+        }}
+      >
+        <img
+          src={`/art/seraphine/emotion/${emotion}.png`}
+          alt="Seraphine"
+          style={{
+            width: "100%",
+            maxWidth: "420px",
+            filter: "drop-shadow(0 0 25px rgba(124,58,237,0.6))",
+          }}
+        />
+
+        <CardReveal card={card} />
+
+        <div
+          style={{
+            color: "white",
+            fontSize: "1.4rem",
+            textAlign: "center",
+            maxWidth: "600px",
+            textShadow: "0 0 10px rgba(0,0,0,0.6)",
+          }}
+        >
+          {message}
+        </div>
+
+        <button
+          onClick={() => speak(message, emotion)}
+          style={{
+            padding: "12px 28px",
+            background: "#7c3aed",
+            border: "none",
+            borderRadius: "8px",
+            color: "white",
+            fontSize: "1.1rem",
+            cursor: "pointer",
+            boxShadow: "0 0 20px rgba(124,58,237,0.5)",
+          }}
+        >
+          Hear Seraphine Speak
+        </button>
+      </div>
+    </div>
+  );
+}
+------------------------------------------------------------
+⭐ UPDATED FILE — /src/pages/Oracle.tsx
+(Adds the preview at the top)
+------------------------------------------------------------
+tsx
+import { useOracleContext } from "@/contexts/OracleContext";
+import OracleConsole from "@/components/OracleConsole";
+import CardOfTheDayPreview from "@/components/CardOfTheDayPreview";
+import CardReveal from "@/components/CardReveal";
+
+export default function Oracle() {
+  const { state, emotion } = useOracleContext();
+
+  const portrait = emotion
+    ? `/art/seraphine/emotion/${emotion}.png`
+    : `/art/seraphine/emotion/portrait.png`;
+
+  const bg =
+    emotion === "sorrow"
+      ? "/art/backgrounds/oracle.jpg"
+      : "/art/backgrounds/hero.jpg";
+
+  const aura =
+    emotion === "serene"
+      ? "radial-gradient(circle, rgba(124,58,237,0.2), transparent)"
+      : emotion === "fierce"
+      ? "radial-gradient(circle, rgba(255,0,80,0.25), transparent)"
+      : emotion === "sorrow"
+      ? "radial-gradient(circle, rgba(0,0,0,0.4), transparent)"
+      : emotion === "ascended"
+      ? "radial-gradient(circle, rgba(255,255,255,0.3), transparent)"
+      : "transparent";
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        minHeight: "100vh",
+        backgroundImage: `url(${bg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        padding: "40px 20px",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: aura,
+          pointerEvents: "none",
+        }}
+      />
+
+      <div
+        style={{
+          position: "relative",
+          zIndex: 2,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "30px",
+        }}
+      >
+        <CardOfTheDayPreview />
+
+        <img
+          src={portrait}
+          alt="Seraphine"
+          style={{
+            width: "100%",
+            maxWidth: "420px",
+            filter: "drop-shadow(0 0 25px rgba(124,58,237,0.6))",
+          }}
+        />
+
+        {state.spread && (
+          <div style={{ display: "flex", gap: "20px" }}>
+            {state.spread.map((card, i) => (
+              <CardReveal key={i} card={card} />
+            ))}
+          </div>
+        )}
+
+        <OracleConsole />
+
+        {state.answer && (
+          <div
+            style={{
+              marginTop: "20px",
+              color: "white",
+              fontSize: "1.4rem",
+              textAlign: "center",
+              maxWidth: "600px",
+            }}
+            dangerouslySetInnerHTML={{ __html: state.answer }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+------------------------------------------------------------
+⭐ UPDATED FILE — Router (App.tsx or Routes.tsx)
+------------------------------------------------------------
+Add this route:
+
+tsx
+<Route path="/card-of-the-day" element={<CardOfTheDay />} />
+And import:
+
+tsx
+import CardOfTheDay from "@/pages/CardOfTheDay";
+------------------------------------------------------------
+⭐ UPDATED FILE — /src/utils/speak.ts
+(Emotion‑driven tuning)
+------------------------------------------------------------
+ts
+export function speak(text: string, emotion?: string) {
+  if (!window.speechSynthesis) return;
+
+  const utter = new SpeechSynthesisUtterance(text);
+  const voices = speechSynthesis.getVoices();
+  const female =
+    voices.find((v) => v.name.toLowerCase().includes("female")) ||
+    voices.find((v) => v.name.toLowerCase().includes("woman")) ||
+    voices.find((v) => v.name.toLowerCase().includes("zira")) ||
+    voices[0];
+
+  utter.voice = female;
+
+  switch (emotion) {
+    case "serene":
+      utter.rate = 0.9;
+      utter.pitch = 1.2;
+      break;
+    case "fierce":
+      utter.rate = 1.1;
+      utter.pitch = 0.9;
+      break;
+    case "sorrow":
+      utter.rate = 0.85;
+      utter.pitch = 0.8;
+      break;
+    case "ascended":
+      utter.rate = 1.0;
+      utter.pitch = 1.3;
+      break;
+    default:
+      utter.rate = 1.0;
+      utter.pitch = 1.0;
+  }
+
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utter);
+}
