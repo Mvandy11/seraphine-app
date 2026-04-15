@@ -1,9 +1,17 @@
+// ------------------------------------------------------------
+// ⭐ UPDATED — /src/pages/CardOfTheDay.tsx
+// (add SaveReadingButton)
+// ------------------------------------------------------------
+
 import { useDailyCard } from "@/hooks/useDailyCard";
 import { speak } from "@/utils/speak";
+import { useOracleContext } from "@/contexts/OracleContext";
 import CardReveal from "@/components/CardReveal";
+import SaveReadingButton from "@/components/SaveReadingButton";
 
 export default function CardOfTheDay() {
   const daily = useDailyCard();
+  const { state } = useOracleContext();
 
   if (!daily) return null;
 
@@ -92,6 +100,15 @@ export default function CardOfTheDay() {
         >
           Hear Seraphine Speak
         </button>
+
+        <SaveReadingButton
+          type="daily"
+          payload={{
+            card,
+            emotion,
+            message,
+          }}
+        />
       </div>
     </div>
   );
