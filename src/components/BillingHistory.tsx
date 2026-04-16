@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePayment } from '../context/PaymentContext';
 import { supabase } from '../lib/supabaseClient';
+import { useSeraphine } from '../hooks/useSeraphine';
 
 interface Invoice {
   id: string;
@@ -71,6 +72,7 @@ const formatDate = (unix: number): string => {
 
 const BillingHistory: React.FC = () => {
   const { isSubscribed, loading: paymentLoading } = usePayment();
+  const { speak, artSlots } = useSeraphine('billingHistory');
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPlaceholder, setIsPlaceholder] = useState(false);
@@ -107,6 +109,7 @@ const BillingHistory: React.FC = () => {
       <div style={styles.container}>
         <div style={styles.header}>
           <h2 style={styles.title}>Billing History</h2>
+          <p style={styles.subtitle}>{speak('loading').text}</p>
         </div>
         <div style={styles.skeletonList}>
           {[1, 2, 3].map((i) => (
@@ -124,9 +127,7 @@ const BillingHistory: React.FC = () => {
           <h2 style={styles.title}>Billing History</h2>
         </div>
         <div style={styles.emptyState}>
-          <p style={styles.emptyText}>
-            No billing history yet. Subscribe to get started.
-          </p>
+          <p style={styles.emptyText}>{speak('empty').text}</p>
         </div>
       </div>
     );
@@ -140,11 +141,7 @@ const BillingHistory: React.FC = () => {
     <div style={styles.container}>
       <div style={styles.header}>
         <h2 style={styles.title}>Billing History</h2>
-        <p style={styles.subtitle}>
-          {invoices.length} invoice{invoices.length !== 1 ? 's' : ''}
-          {totalPaid > 0 &&
-            ` · ${formatCurrency(totalPaid, invoices[0]?.currency || 'usd')} paid`}
-        </p>
+        <p style={styles.subtitle}>{speak('active').text}</p>
       </div>
 
       {isPlaceholder && (
