@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePayment } from '../context/PaymentContext';
-import { supabase } from '../lib/supabaseClient';
+import { useSeraphine } from '../hooks/useSeraphine';
+import SeraphineMessage from './SeraphineMessage';
 
 interface WelcomePremiumProps {
   onContinue?: () => void;
@@ -31,22 +32,8 @@ const FEATURES = [
 
 const WelcomePremium: React.FC<WelcomePremiumProps> = ({ onContinue }) => {
   const { subscription, isSubscribed, loading } = usePayment();
-  const [displayName, setDisplayName] = useState<string>('');
+  const { name, speak } = useSeraphine('welcomePremium');
   const [revealedFeatures, setRevealedFeatures] = useState<number>(0);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        setDisplayName(
-          user.user_metadata?.display_name || user.email || 'Traveler'
-        );
-      }
-    };
-    fetchUser();
-  }, []);
 
   useEffect(() => {
     if (!loading && isSubscribed) {
@@ -67,7 +54,7 @@ const WelcomePremium: React.FC<WelcomePremiumProps> = ({ onContinue }) => {
     return (
       <div style={styles.container}>
         <div style={styles.loadingOrb} />
-        <p style={styles.loadingText}>Attuning to your essence...</p>
+        <p style={styles.loadingText}>{speak('loading').text}</p>
       </div>
     );
   }
@@ -102,9 +89,10 @@ const WelcomePremium: React.FC<WelcomePremiumProps> = ({ onContinue }) => {
   return (
     <div style={styles.container}>
       <div style={styles.glowRing} />
+      <SeraphineMessage entry={speak('active')} className="mb-4 max-w-md" />
       <h1 style={styles.title}>Welcome to the Inner Circle</h1>
       <p style={styles.greeting}>
-        {displayName}, your {planLabel} membership is active.
+        {name}, your {planLabel} membership is active.
       </p>
       <div style={styles.tierBadge}>
         <span style={styles.tierIcon}>◆</span>
