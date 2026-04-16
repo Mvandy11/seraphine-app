@@ -1,51 +1,26 @@
 // src/hooks/useSeraphine.ts
-// Binds Supabase auth → resolves display name → returns Seraphine's dialogue lines
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { resolveDisplayName, getDialogue, ART_SLOTS,
+         type ComponentKey, type DialogueState } from '../lib/seraphineDialogue';
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import {
-  resolveDisplayName,
-  getDialogue,
-  DialogueComponent,
-  DialogueState,
-} from "@/lib/seraphineDialogue";
-import type { DialogueEntry } from "@/lib/seraphineDialogue";
-
-interface SeraphineHook {
-  name: string;
-  getLine: <C extends DialogueComponent>(
-    component: C,
-    state: DialogueState<C>,
-  ) => DialogueEntry;
-}
-
-export function useSeraphine(): SeraphineHook {
-  const [name, setName] = useState<string>("Traveler");
+export function useSeraphine(component: ComponentKey) {
+  const [name, setName] = useState('Traveler');
+  const [nameReady, setNameReady] = useState(false);
 
   useEffect(() => {
-    let active = true;
-
-    supabase.auth.getUser().then(({ data }) => {
-      if (!active) return;
-      setName(resolveDisplayName(data.user));
-    });
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setName(resolveDisplayName(session?.user ?? null));
-    });
-
-    return () => {
-      active = false;
-      listener.subscription.unsubscribe();
-    };
+    let cancelled = false;
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!cancelled) {
+        setName(resolveDisplayName(user));
+        setNameReady(true);
+      }
+    }).catch(() => { if (!cancelled) setNameReady(true); });
+    return () => { cancelled = true; };
   }, []);
 
-  function getLine<C extends DialogueComponent>(
-    component: C,
-    state: DialogueState<C>,
-  ): DialogueEntry {
-    return getDialogue(component, state, name);
-  }
+  const speak = (state: DialogueState) => getDialogue(component, state, name);
+  const artSlots = ART_SLOTS[component] ?? [];
 
-  return { name, getLine };
+  return { name, nameReady, speak, artSlots };
 }
