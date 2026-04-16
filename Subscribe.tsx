@@ -1,8 +1,12 @@
 // src/pages/Subscribe.tsx
+
 import React from "react";
-import { Link } from "react-router-dom";
+import { useApp } from "@/contexts/AppContext";
+import SubscribeTab from "@/components/SubscribeTab";
 
 const Subscribe: React.FC = () => {
+  const { user } = useApp();
+
   return (
     <div style={{ padding: "40px", color: "white", textAlign: "center" }}>
       <h1 style={{ fontSize: "2rem", marginBottom: "20px" }}>Subscribe</h1>
@@ -11,18 +15,9 @@ const Subscribe: React.FC = () => {
         Unlock full access to Seraphine.
       </p>
 
-      <Link
-        to="/manage"
-        style={{
-          padding: "14px 24px",
-          background: "#3b82f6",
-          borderRadius: "8px",
-          color: "white",
-          textDecoration: "none",
-        }}
-      >
-        Continue
-      </Link>
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <SubscribeTab user={user} />
+      </div>
     </div>
   );
 };

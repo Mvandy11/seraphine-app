@@ -2,8 +2,11 @@
 
 import React, { useState } from "react";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
-import { usePayment } from "../context/PaymentContext";
-import { createSetupIntent } from "../services/subscriptionService";
+import { usePaymentContext } from "@/contexts/PaymentContext";
+import {
+  createSetupIntent,
+  startSubscription,
+} from "@/services/subscriptionService";
 
 type Props = {
   user: { id: string; email: string | null } | null;
@@ -12,11 +15,20 @@ type Props = {
 const SubscribeTab: React.FC<Props> = ({ user }) => {
   const stripe = useStripe();
   const elements = useElements();
-  const { status, isLoading, subscribe, cancel } = usePayment();
+
+  const {
+    status,
+    loading,
+    refreshSubscription,
+    cancelMembership,
+    cancelAtPeriodEnd,
+  } = usePaymentContext();
+
   const [error, setError] = useState<string | null>(null);
 
   const handleSubscribe = async () => {
-    if (!stripe || !elements || !user || !user.email) return;
+    if (!stripe || !elements || !user?.email) return;
+
     setError(null);
 
     try {
@@ -30,9 +42,7 @@ const SubscribeTab: React.FC<Props> = ({ user }) => {
       const result = await stripe.confirmCardSetup(clientSecret, {
         payment_method: {
           card: cardElement,
-          billing_details: {
-            email: user.email,
-          },
+          billing_details: { email: user.email },
         },
       });
 
@@ -42,8 +52,11 @@ const SubscribeTab: React.FC<Props> = ({ user }) => {
 
       const paymentMethodId = result.setupIntent.payment_method as string;
 
-      // 3. Start subscription
-      await subscribe(paymentMethodId);
+      // 3. Start subscription via Edge Function
+      await startSubscription(user.id, paymentMethodId);
+
+      // 4. Refresh UI
+      await refreshSubscription();
     } catch (err: any) {
       setError(err.message || "Subscription failed");
     }
@@ -52,7 +65,8 @@ const SubscribeTab: React.FC<Props> = ({ user }) => {
   const handleCancel = async () => {
     setError(null);
     try {
-      await cancel();
+      await cancelMembership();
+      await refreshSubscription();
     } catch (err: any) {
       setError(err.message || "Cancel failed");
     }
@@ -65,32 +79,33 @@ const SubscribeTab: React.FC<Props> = ({ user }) => {
   return (
     <div style={{ maxWidth: 420 }}>
       <h2>Full Access Membership</h2>
-      <p>Unlocks all features. Cancel anytime. No refunds for current period.</p>
+      <p>Unlocks all features. Cancel anytime.</p>
 
+      {/* Not subscribed */}
       {status === "none" && (
         <>
           <div style={{ margin: "16px 0" }}>
             <CardElement />
           </div>
-          <button onClick={handleSubscribe} disabled={isLoading || !stripe}>
-            {isLoading ? "Processing..." : "Subscribe"}
+          <button onClick={handleSubscribe} disabled={loading || !stripe}>
+            {loading ? "Processing..." : "Subscribe"}
           </button>
         </>
       )}
 
-      {status === "active" && (
+      {/* Active */}
+      {status === "active" && !cancelAtPeriodEnd && (
         <>
           <p>Your membership is active.</p>
-          <button onClick={handleCancel} disabled={isLoading}>
-            {isLoading ? "Processing..." : "Cancel Membership"}
+          <button onClick={handleCancel} disabled={loading}>
+            {loading ? "Processing..." : "Cancel Membership"}
           </button>
         </>
       )}
 
-      {status === "canceling" && (
-        <p>
-          Your membership will end at the end of the current billing period.
-        </p>
+      {/* Cancel scheduled */}
+      {cancelAtPeriodEnd && (
+        <p>Your membership will end at the end of the current billing period.</p>
       )}
 
       {error && <p style={{ color: "red" }}>{error}</p>}

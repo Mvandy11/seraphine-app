@@ -8,8 +8,16 @@ import {
 
 type SubscriptionStatus = "none" | "active" | "canceling";
 
+export interface SubscriptionInfo {
+  plan: string;
+  current_period_end: number | null;
+}
+
 type PaymentContextValue = {
   status: SubscriptionStatus;
+  isSubscribed: boolean;
+  subscription: SubscriptionInfo | null;
+  loading: boolean;
   isLoading: boolean;
   subscribe: (paymentMethodId: string) => Promise<void>;
   cancel: () => Promise<void>;
@@ -24,12 +32,16 @@ type Props = {
 
 export const PaymentProvider: React.FC<Props> = ({ user, children }) => {
   const [status, setStatus] = useState<SubscriptionStatus>("none");
+  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // TODO: Optionally fetch subscription status from Supabase on mount
+  // TODO: Fetch real subscription status from Supabase on mount
   useEffect(() => {
-    // Example placeholder:
-    // fetchSubscriptionStatus(user?.id).then(setStatus);
+    // Example:
+    // fetchSubscriptionStatus(user?.id).then(({ status, subscription }) => {
+    //   setStatus(status);
+    //   setSubscription(subscription);
+    // });
   }, [user?.id]);
 
   const subscribe = async (paymentMethodId: string) => {
@@ -39,6 +51,10 @@ export const PaymentProvider: React.FC<Props> = ({ user, children }) => {
       const res = await startSubscription(user.id, user.email, paymentMethodId);
       if (res.status === "active") {
         setStatus("active");
+        setSubscription({
+          plan: "full",
+          current_period_end: res.subscription?.current_period_end ?? null,
+        });
       }
     } finally {
       setIsLoading(false);
@@ -51,15 +67,27 @@ export const PaymentProvider: React.FC<Props> = ({ user, children }) => {
     try {
       const res = await cancelSubscription(user.id, user.email);
       if (res.status === "canceled") {
-        setStatus("canceling"); // active until period end
+        setStatus("canceling");
       }
     } finally {
       setIsLoading(false);
     }
   };
 
+  const isSubscribed = status === "active";
+
   return (
-    <PaymentContext.Provider value={{ status, isLoading, subscribe, cancel }}>
+    <PaymentContext.Provider
+      value={{
+        status,
+        isSubscribed,
+        subscription,
+        loading: isLoading,
+        isLoading,
+        subscribe,
+        cancel,
+      }}
+    >
       {children}
     </PaymentContext.Provider>
   );

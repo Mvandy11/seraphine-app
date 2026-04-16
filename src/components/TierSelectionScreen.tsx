@@ -4,22 +4,18 @@ import { useApp } from "@/contexts/AppContext";
 
 const TierSelectionScreen = () => {
   const navigate = useNavigate();
-  const { user, signIn, signUp, setShowAuthModal } = useApp();
+  const { user, setShowAuthModal } = useApp();
 
   const [loading, setLoading] = useState(false);
 
-  const handleSubscribe = async (tier: string) => {
+  const handleSubscribe = (tier: string) => {
     if (!user) {
       setShowAuthModal(true);
       return;
     }
 
-    setLoading(true);
-
-    // Simulate checkout → replace with real Stripe checkout later
-    setTimeout(() => {
-      navigate("/payment-success");
-    }, 800);
+    // Go directly to the real Stripe subscription flow
+    navigate("/subscribe");
   };
 
   return (

@@ -1,53 +1,24 @@
-import { useState } from "react";
-import { useAppContext } from "@/contexts/AppContext";
+// src/pages/ManageSubscription.tsx
+
 import { usePaymentContext } from "@/contexts/PaymentContext";
+import { useApp } from "@/contexts/AppContext";
 
 export default function ManageSubscription() {
-  const { user } = useAppContext();
+  const { user } = useApp();
   const {
+    status,
+    tier,
     hasAccess,
-    subscriptionTier,
-    setSubscriptionTier,
-    setHasAccess,
+    loading,
+    cancelAtPeriodEnd,
+    trialEndsAt,
+    cancelMembership,
+    refreshSubscription,
   } = usePaymentContext();
 
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState("");
-
   const handleCancel = async () => {
-    setLoading(true);
-    setSuccess("");
-
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1200));
-
-      setHasAccess(false);
-      setSubscriptionTier(null);
-      setSuccess("Your subscription has been canceled.");
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleReactivate = async () => {
-    setLoading(true);
-    setSuccess("");
-
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1200));
-
-      setHasAccess(true);
-      setSubscriptionTier("premium");
-      setSuccess("Your subscription is active again.");
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    await cancelMembership();
+    await refreshSubscription();
   };
 
   if (!user) {
@@ -60,41 +31,54 @@ export default function ManageSubscription() {
   }
 
   return (
-    <div className="manage-subscription">
+    <div className="manage-subscription" style={{ padding: "20px" }}>
       <h2>Manage Subscription</h2>
 
-      <div className="subscription-status">
-        <p>
-          <strong>Status:</strong>{" "}
-          {hasAccess ? "Active" : "Inactive"}
-        </p>
-
-        <p>
-          <strong>Tier:</strong>{" "}
-          {subscriptionTier ? subscriptionTier : "None"}
-        </p>
-      </div>
-
-      {success && <p className="success-message">{success}</p>}
-
-      {loading && <p className="loading">Processing...</p>}
+      {loading && <p>Loading subscription...</p>}
 
       {!loading && (
-        <div className="actions">
-          {hasAccess ? (
-            <button onClick={handleCancel} className="cancel-btn">
-              Cancel Subscription
-            </button>
-          ) : (
-            <button onClick={handleReactivate} className="reactivate-btn">
-              Reactivate Subscription
+        <>
+          <div className="subscription-status" style={{ marginBottom: "20px" }}>
+            <p>
+              <strong>Status:</strong> {status}
+            </p>
+
+            <p>
+              <strong>Tier:</strong> {tier ?? "None"}
+            </p>
+
+            {trialEndsAt && (
+              <p>
+                <strong>Trial Ends:</strong>{" "}
+                {new Date(trialEndsAt).toLocaleDateString()}
+              </p>
+            )}
+
+            {cancelAtPeriodEnd && (
+              <p style={{ color: "orange" }}>
+                Your membership will end at the end of the billing period.
+              </p>
+            )}
+          </div>
+
+          {/* Actions */}
+          {hasAccess && !cancelAtPeriodEnd && (
+            <button
+              onClick={handleCancel}
+              className="cancel-btn"
+              disabled={loading}
+            >
+              {loading ? "Processing..." : "Cancel Membership"}
             </button>
           )}
-        </div>
+
+          {!hasAccess && (
+            <p style={{ opacity: 0.7 }}>
+              You do not have an active subscription.
+            </p>
+          )}
+        </>
       )}
     </div>
   );
 }
-
-
-
