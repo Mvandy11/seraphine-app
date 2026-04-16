@@ -3,7 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import Oracle from "@/pages/Oracle";
-import ManageSubscription from "@/pages/ManageSubscription";
+import ManageSubscription from "@/components/ManageSubscription";
 import Subscribe from "@/pages/Subscribe";
 import CardOfTheDay from "@/pages/CardOfTheDay";
 import SavedReadings from "@/pages/SavedReadings";
