@@ -81,8 +81,8 @@ const SubscribeTab: React.FC<Props> = ({ user }) => {
 
   return (
     <div style={{ maxWidth: 420 }}>
-      <SeraphineMessage entry={speak('greeting')} className="mb-2" />
-      <SeraphineMessage entry={speak('active')} className="mb-4" />
+      <SeraphineMessage line={speak('greeting')} style={{ marginBottom: '0.5rem' }} />
+      <SeraphineMessage line={speak('active')} style={{ marginBottom: '1.5rem' }} />
       <h2>Full Access Membership</h2>
       <p>Unlocks all features. Cancel anytime.</p>
 

@@ -1,0 +1,702 @@
+Place these files:
+Code
+
+
+Copy
+src/
+  lib/
+    seraphineDialogue.ts     ← Voice engine core
+  hooks/
+    useSeraphine.ts          ← Auth → Seraphine binding
+  components/
+    SeraphineMessage.tsx     ← Dialogue renderer
+    CinematicArtSlot.tsx     ← Art placeholder system
+src/lib/seraphineDialogue.ts
+tsx
+
+
+Copy
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Seraphine Voice Engine — Dialogue maps, name resolution, art slots
+// Single source of truth for every Seraphine line across the platform.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// ─── Types ───────────────────────────────────────────────────
+
+export type ComponentKey =
+  | 'welcomePremium'
+  | 'premiumGate'
+  | 'billingHistory'
+  | 'subscribeTab'
+  | 'manageSubscription';
+
+export type DialogueState =
+  | 'loading'
+  | 'active'
+  | 'empty'
+  | 'locked'
+  | 'greeting'
+  | 'warning'
+  | 'success';
+
+export interface DialogueLine {
+  text: string;
+  useName: boolean;
+  isSubtle?: boolean;
+  icon?: string;
+}
+
+export interface ArtSlot {
+  id: string;
+  label: string;
+  fallbackGradient: string;
+  position: 'hero' | 'avatar' | 'accent' | 'background';
+}
+
+// ─── Name Resolution ─────────────────────────────────────────
+// Fallback chain: display_name → first name from email → "Traveler"
+
+export function resolveDisplayName(
+  user: {
+    user_metadata?: { display_name?: string };
+    email?: string;
+  } | null
+): string {
+  if (!user) return 'Traveler';
+
+  const displayName = user.user_metadata?.display_name?.trim();
+  if (displayName) return displayName;
+
+  const email = user.email;
+  if (email) {
+    const local = email.split('@')[0];
+    const cleaned = local
+      .replace(/[._]/g, ' ')
+      .replace(/\d+/g, '')
+      .trim();
+    if (cleaned.length > 1) {
+      const firstName = cleaned.split(' ')[0];
+      return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+    }
+  }
+
+  return 'Traveler';
+}
+
+// ─── Dialogue Map ────────────────────────────────────────────
+// {name} is replaced at runtime via getDialogue()
+
+const DIALOGUE_MAP: Record<ComponentKey, Partial<Record<DialogueState, DialogueLine>>> = {
+  welcomePremium: {
+    loading: {
+      text: 'Attuning to your essence...',
+      useName: false,
+      isSubtle: true,
+      icon: '🔮',
+    },
+    active: {
+      text: '{name}, the flames have recognized you. Welcome to the inner circle.',
+      useName: true,
+      icon: '🔥',
+    },
+    empty: {
+      text: 'The path awaits you, {name}. Your flame has yet to be kindled.',
+      useName: true,
+      icon: '✨',
+    },
+  },
+
+  premiumGate: {
+    locked: {
+      text: '{name}, this realm requires deeper attunement to enter.',
+      useName: true,
+      icon: '🔒',
+    },
+    loading: {
+      text: 'Reading the wards...',
+      useName: false,
+      isSubtle: true,
+    },
+  },
+
+  billingHistory: {
+    active: {
+      text: 'Your chronicle of patronage, {name}.',
+      useName: true,
+      isSubtle: true,
+    },
+    empty: {
+      text: 'No records yet inscribed upon the ledger.',
+      useName: false,
+      isSubtle: true,
+    },
+    loading: {
+      text: 'Consulting the archives...',
+      useName: false,
+      isSubtle: true,
+    },
+  },
+
+  subscribeTab: {
+    greeting: {
+      text: '{name}, choose the flame that calls to you.',
+      useName: true,
+      icon: '🔥',
+    },
+    active: {
+      text: 'Each tier unlocks deeper layers of the mythic experience.',
+      useName: false,
+      isSubtle: true,
+    },
+  },
+
+  manageSubscription: {
+    active: {
+      text: 'Your sacred bond is strong, {name}.',
+      useName: true,
+      isSubtle: true,
+    },
+    warning: {
+      text: 'The flame dims... but it never truly dies.',
+      useName: false,
+      icon: '🕯️',
+    },
+    success: {
+      text: 'It is done. The realm acknowledges your decision.',
+      useName: false,
+    },
+  },
+};
+
+// ─── Dialogue Resolver ───────────────────────────────────────
+
+export function getDialogue(
+  component: ComponentKey,
+  state: DialogueState,
+  name: string
+): DialogueLine | null {
+  const stateMap = DIALOGUE_MAP[component];
+  if (!stateMap) return null;
+
+  const line = stateMap[state];
+  if (!line) return null;
+
+  return {
+    ...line,
+    text: line.useName ? line.text.replace(/\{name\}/g, name) : line.text,
+  };
+}
+
+// ─── Art Slot Definitions ────────────────────────────────────
+// Each component declares named positions for cinematic art.
+// CinematicArtSlot renders the fallback gradient until imageUrl is provided.
+
+export const ART_SLOTS: Record<ComponentKey, ArtSlot[]> = {
+  welcomePremium: [
+    {
+      id: 'welcome-hero',
+      label: 'Full-width cinematic backdrop',
+      fallbackGradient: 'linear-gradient(180deg, rgba(124,58,237,0.12) 0%, rgba(10,10,18,0) 100%)',
+      position: 'hero',
+    },
+    {
+      id: 'welcome-avatar',
+      label: 'Seraphine portrait',
+      fallbackGradient: 'radial-gradient(circle, rgba(167,139,250,0.2) 0%, transparent 70%)',
+      position: 'avatar',
+    },
+  ],
+
+  subscribeTab: [
+    {
+      id: 'subscribe-hero',
+      label: 'Three ascending flames',
+      fallbackGradient: 'linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(192,132,252,0.06) 100%)',
+      position: 'hero',
+    },
+    {
+      id: 'subscribe-avatar',
+      label: 'Seraphine guiding',
+      fallbackGradient: 'radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)',
+      position: 'avatar',
+    },
+  ],
+
+  premiumGate: [
+    {
+      id: 'gate-accent',
+      label: 'Runic ward overlay',
+      fallbackGradient: 'linear-gradient(180deg, rgba(124,58,237,0.06) 0%, rgba(10,10,18,0.8) 100%)',
+      position: 'accent',
+    },
+  ],
+
+  billingHistory: [
+    {
+      id: 'billing-background',
+      label: 'Parchment/ledger texture',
+      fallbackGradient: 'linear-gradient(180deg, rgba(74,69,101,0.04) 0%, rgba(10,10,18,0) 100%)',
+      position: 'background',
+    },
+  ],
+
+  manageSubscription: [
+    {
+      id: 'manage-accent',
+      label: 'Glowing subscription sigil',
+      fallbackGradient: 'radial-gradient(circle at 50% 30%, rgba(124,58,237,0.1) 0%, transparent 60%)',
+      position: 'accent',
+    },
+  ],
+};
+src/hooks/useSeraphine.ts
+tsx
+
+
+Copy
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// React hook that binds Supabase auth → Seraphine's voice engine.
+// Resolves the user's display name once, then exposes speak() and artSlots.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import {
+  resolveDisplayName,
+  getDialogue,
+  ART_SLOTS,
+  type ComponentKey,
+  type DialogueState,
+  type DialogueLine,
+  type ArtSlot,
+} from '../lib/seraphineDialogue';
+
+interface UseSeraphineReturn {
+  /** Resolved display name — "Michael", parsed first name, or "Traveler" */
+  name: string;
+  /** True once user data has been fetched and name resolved */
+  nameReady: boolean;
+  /** Get Seraphine's dialogue line for a given state */
+  speak: (state: DialogueState) => DialogueLine | null;
+  /** Art slot definitions for this component */
+  artSlots: ArtSlot[];
+}
+
+export function useSeraphine(component: ComponentKey): UseSeraphineReturn {
+  const [name, setName] = useState<string>('Traveler');
+  const [nameReady, setNameReady] = useState<boolean>(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    supabase.auth
+      .getUser()
+      .then(({ data: { user } }) => {
+        if (!cancelled) {
+          setName(resolveDisplayName(user));
+          setNameReady(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setNameReady(true);
+          // Falls back to "Traveler" — graceful degradation
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const speak = (state: DialogueState): DialogueLine | null => {
+    return getDialogue(component, state, name);
+  };
+
+  const artSlots = ART_SLOTS[component] ?? [];
+
+  return { name, nameReady, speak, artSlots };
+}
+src/components/SeraphineMessage.tsx
+tsx
+
+
+Copy
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Reusable dialogue renderer — glowing avatar orb + Seraphine's text.
+// Supports full and subtle (compact) display modes.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+import React from 'react';
+import type { DialogueLine } from '../lib/seraphineDialogue';
+
+interface SeraphineMessageProps {
+  /** The dialogue line from speak() — renders nothing if null */
+  line: DialogueLine | null;
+  /** Override the avatar size in px (default: 40 for full, 28 for subtle) */
+  avatarSize?: number;
+  /** Optional CSS overrides for the outer container */
+  style?: React.CSSProperties;
+}
+
+const SeraphineMessage: React.FC<SeraphineMessageProps> = ({
+  line,
+  avatarSize,
+  style,
+}) => {
+  if (!line) return null;
+
+  const isSubtle = line.isSubtle ?? false;
+  const resolvedAvatarSize = avatarSize ?? (isSubtle ? 28 : 40);
+
+  return (
+    <div
+      style={{
+        ...styles.container,
+        ...(isSubtle ? styles.containerSubtle : {}),
+        ...style,
+      }}
+    >
+      {/* Avatar Orb */}
+      <div
+        style={{
+          ...styles.avatarOrb,
+          width: `${resolvedAvatarSize}px`,
+          height: `${resolvedAvatarSize}px`,
+          ...(isSubtle ? styles.avatarOrbSubtle : {}),
+        }}
+      >
+        <span
+          style={{
+            ...styles.avatarInner,
+            width: `${resolvedAvatarSize * 0.55}px`,
+            height: `${resolvedAvatarSize * 0.55}px`,
+          }}
+        />
+      </div>
+
+      {/* Dialogue Content */}
+      <div style={styles.textBlock}>
+        {!isSubtle && (
+          <span style={styles.speakerName}>Seraphine</span>
+        )}
+        <p
+          style={{
+            ...styles.dialogueText,
+            ...(isSubtle ? styles.dialogueTextSubtle : {}),
+          }}
+        >
+          {line.icon && (
+            <span style={styles.icon}>{line.icon} </span>
+          )}
+          {line.text}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// ─── Styles ──────────────────────────────────────────────────
+
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '0.85rem',
+    padding: '1rem 1.25rem',
+    background: 'rgba(124, 58, 237, 0.04)',
+    border: '1px solid rgba(124, 58, 237, 0.1)',
+    borderRadius: '16px',
+    fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+    maxWidth: '600px',
+  },
+  containerSubtle: {
+    padding: '0.6rem 1rem',
+    background: 'transparent',
+    border: 'none',
+    borderRadius: '8px',
+    gap: '0.6rem',
+  },
+  avatarOrb: {
+    flexShrink: 0,
+    borderRadius: '50%',
+    background: 'radial-gradient(circle at 40% 35%, rgba(167,139,250,0.35) 0%, rgba(124,58,237,0.15) 60%, transparent 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 0 12px rgba(124, 58, 237, 0.2)',
+    position: 'relative' as const,
+  },
+  avatarOrbSubtle: {
+    boxShadow: '0 0 6px rgba(124, 58, 237, 0.12)',
+  },
+  avatarInner: {
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, #c084fc 0%, #7c3aed 100%)',
+    display: 'block',
+  },
+  textBlock: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.2rem',
+    minWidth: 0,
+  },
+  speakerName: {
+    fontSize: '0.72rem',
+    fontWeight: 700,
+    color: '#a78bfa',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.08em',
+  },
+  dialogueText: {
+    margin: 0,
+    fontSize: '0.95rem',
+    lineHeight: 1.55,
+    color: '#c4b5fd',
+    fontStyle: 'italic',
+  },
+  dialogueTextSubtle: {
+    fontSize: '0.85rem',
+    color: '#8b80b0',
+  },
+  icon: {
+    fontStyle: 'normal',
+  },
+};
+
+export default SeraphineMessage;
+src/components/CinematicArtSlot.tsx
+tsx
+
+
+Copy
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Art placeholder system — renders fallback gradients now,
+// swaps to real cinematic art assets when imageUrl is provided.
+// Dev mode shows labeled slot identifiers for asset mapping.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+import React from 'react';
+import type { ArtSlot } from '../lib/seraphineDialogue';
+
+interface CinematicArtSlotProps {
+  /** Art slot definition from seraphineDialogue.ts */
+  slot: ArtSlot;
+  /** Override height (e.g., '320px', '100%') */
+  height?: string;
+  /** When provided, replaces the fallback gradient with the real image */
+  imageUrl?: string;
+  /** Show dev label overlay identifying the slot (default: true in development) */
+  showDevLabel?: boolean;
+  /** Optional CSS overrides */
+  style?: React.CSSProperties;
+  /** Children rendered on top of the art layer */
+  children?: React.ReactNode;
+}
+
+const CinematicArtSlot: React.FC<CinematicArtSlotProps> = ({
+  slot,
+  height = '240px',
+  imageUrl,
+  showDevLabel,
+  style,
+  children,
+}) => {
+  const isDev =
+    showDevLabel ?? (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development');
+
+  const positionStyles = POSITION_DEFAULTS[slot.position] ?? {};
+
+  const containerStyle: React.CSSProperties = {
+    ...positionStyles,
+    height,
+    background: imageUrl ? 'none' : slot.fallbackGradient,
+    position: 'relative' as const,
+    overflow: 'hidden',
+    borderRadius: slot.position === 'avatar' ? '50%' : '0',
+    ...style,
+  };
+
+  return (
+    <div style={containerStyle}>
+      {/* Real image layer */}
+      {imageUrl && (
+        <img
+          src={imageUrl}
+          alt={slot.label}
+          style={imageStyles}
+          loading="lazy"
+        />
+      )}
+
+      {/* Dev label overlay */}
+      {isDev && !imageUrl && (
+        <div style={devLabelStyles}>
+          <span style={devLabelBracket}>[{slot.id}]</span>
+          <span style={devLabelText}>{slot.label}</span>
+        </div>
+      )}
+
+      {/* Content rendered on top */}
+      {children && (
+        <div style={contentOverlayStyles}>{children}</div>
+      )}
+    </div>
+  );
+};
+
+// ─── Position Defaults ───────────────────────────────────────
+
+const POSITION_DEFAULTS: Record<string, React.CSSProperties> = {
+  hero: {
+    width: '100%',
+  },
+  avatar: {
+    width: '80px',
+    height: '80px',
+    flexShrink: 0,
+  },
+  accent: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    width: '100%',
+    pointerEvents: 'none' as const,
+    zIndex: 0,
+  },
+  background: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    pointerEvents: 'none' as const,
+    zIndex: 0,
+  },
+};
+
+const imageStyles: React.CSSProperties = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  width: '100%',
+  height: '100%',
+  objectFit: 'cover',
+  objectPosition: 'center',
+};
+
+const devLabelStyles: React.CSSProperties = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: '0.25rem',
+  pointerEvents: 'none',
+  zIndex: 1,
+};
+
+const devLabelBracket: React.CSSProperties = {
+  fontSize: '0.7rem',
+  fontFamily: "'Fira Code', 'Consolas', monospace",
+  color: 'rgba(167, 139, 250, 0.35)',
+  letterSpacing: '0.04em',
+};
+
+const devLabelText: React.CSSProperties = {
+  fontSize: '0.65rem',
+  color: 'rgba(139, 128, 176, 0.3)',
+  fontStyle: 'italic',
+  textAlign: 'center',
+  maxWidth: '180px',
+};
+
+const contentOverlayStyles: React.CSSProperties = {
+  position: 'relative',
+  zIndex: 2,
+  width: '100%',
+  height: '100%',
+};
+
+export default CinematicArtSlot;
+⚡ Wiring Into Existing Components
+Each component needs 3 lines to connect — one import, one hook call, one <SeraphineMessage /> render. Here's the pattern for each:
+
+WelcomePremium.tsx
+tsx
+
+
+Copy
+import { useSeraphine } from '../hooks/useSeraphine';
+import SeraphineMessage from './SeraphineMessage';
+import CinematicArtSlot from './CinematicArtSlot';
+
+// Inside the component, replace the manual displayName logic:
+const { name, speak, artSlots } = useSeraphine('welcomePremium');
+
+// In JSX — replace hardcoded greeting with:
+<SeraphineMessage line={speak('active')} />
+// Replace loading text with:  speak('loading')?.text
+// Replace displayName with:   name
+PremiumGate.tsx
+tsx
+
+
+Copy
+const { speak } = useSeraphine('premiumGate');
+// Gate message:   speak('locked')?.text
+// Loading:        speak('loading')?.text
+BillingHistory.tsx
+tsx
+
+
+Copy
+const { speak } = useSeraphine('billingHistory');
+// Header subtitle:  speak('active')?.text
+// Empty state:      speak('empty')?.text
+// Loading:          speak('loading')?.text
+SubscribeTab.tsx
+tsx
+
+
+Copy
+const { speak, artSlots } = useSeraphine('subscribeTab');
+// Above plan cards:  <SeraphineMessage line={speak('greeting')} />
+// Below greeting:    speak('active')?.text
+ManageSubscription.tsx
+tsx
+
+
+Copy
+const { speak } = useSeraphine('manageSubscription');
+// Active:    speak('active')    — affirming with name
+// Warning:   speak('warning')   — mythic, no guilt
+// Success:   speak('success')   — brief confirmation
+WebhookSyncChecker.tsx
+No changes — intentionally excluded. Dev tooling, not lore.
+
+Your full updated tree after placement:
+
+Code
+
+
+Copy
+src/
+  lib/
+    supabaseClient.ts        ✓
+    seraphineDialogue.ts     ← NEW
+  hooks/
+    useSeraphine.ts          ← NEW
+  context/
+    PaymentContext.tsx        ✓
+  components/
+    SubscribeTab.tsx          ✓
+    ManageSubscription.tsx    ✓
+    WelcomePremium.tsx        ✓
+    PremiumGate.tsx           ✓
+    BillingHistory.tsx        ✓
+    WebhookSyncChecker.tsx    ✓
+    SeraphineMessage.tsx     ← NEW
+    CinematicArtSlot.tsx     ← NEW

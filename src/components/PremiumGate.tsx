@@ -45,7 +45,7 @@ const PremiumGate: React.FC<PremiumGateProps> = ({
     return (
       <div style={styles.loadingContainer}>
         <div style={styles.spinner} />
-        <p style={styles.loadingText}>{speak('loading').text}</p>
+        <p style={styles.loadingText}>{speak('loading')?.text}</p>
       </div>
     );
   }
@@ -69,7 +69,7 @@ const PremiumGate: React.FC<PremiumGateProps> = ({
       <div style={styles.gateCard}>
         <div style={styles.lockIcon}>🔒</div>
         <h3 style={styles.gateTitle}>{requiredLabel} Content</h3>
-        <p style={styles.gateMessage}>{speak('locked').text}</p>
+        <p style={styles.gateMessage}>{speak('locked')?.text}</p>
         {onUpgrade && (
           <button onClick={onUpgrade} style={styles.upgradeButton}>
             Upgrade to {requiredLabel}

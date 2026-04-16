@@ -109,7 +109,7 @@ const BillingHistory: React.FC = () => {
       <div style={styles.container}>
         <div style={styles.header}>
           <h2 style={styles.title}>Billing History</h2>
-          <p style={styles.subtitle}>{speak('loading').text}</p>
+          <p style={styles.subtitle}>{speak('loading')?.text}</p>
         </div>
         <div style={styles.skeletonList}>
           {[1, 2, 3].map((i) => (
@@ -127,7 +127,7 @@ const BillingHistory: React.FC = () => {
           <h2 style={styles.title}>Billing History</h2>
         </div>
         <div style={styles.emptyState}>
-          <p style={styles.emptyText}>{speak('empty').text}</p>
+          <p style={styles.emptyText}>{speak('empty')?.text}</p>
         </div>
       </div>
     );
@@ -141,7 +141,7 @@ const BillingHistory: React.FC = () => {
     <div style={styles.container}>
       <div style={styles.header}>
         <h2 style={styles.title}>Billing History</h2>
-        <p style={styles.subtitle}>{speak('active').text}</p>
+        <p style={styles.subtitle}>{speak('active')?.text}</p>
       </div>
 
       {isPlaceholder && (

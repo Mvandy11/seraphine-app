@@ -54,7 +54,7 @@ const WelcomePremium: React.FC<WelcomePremiumProps> = ({ onContinue }) => {
     return (
       <div style={styles.container}>
         <div style={styles.loadingOrb} />
-        <p style={styles.loadingText}>{speak('loading').text}</p>
+        <p style={styles.loadingText}>{speak('loading')?.text}</p>
       </div>
     );
   }
@@ -89,7 +89,7 @@ const WelcomePremium: React.FC<WelcomePremiumProps> = ({ onContinue }) => {
   return (
     <div style={styles.container}>
       <div style={styles.glowRing} />
-      <SeraphineMessage entry={speak('active')} className="mb-4 max-w-md" />
+      <SeraphineMessage line={speak('active')} style={{ marginBottom: '1.5rem' }} />
       <h1 style={styles.title}>Welcome to the Inner Circle</h1>
       <p style={styles.greeting}>
         {name}, your {planLabel} membership is active.
