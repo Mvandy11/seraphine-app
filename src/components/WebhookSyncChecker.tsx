@@ -1,0 +1,518 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import { usePayment } from '../context/PaymentContext';
+import { supabase } from '../lib/supabaseClient';
+
+interface DiagnosticCheck {
+  label: string;
+  passed: boolean;
+  detail?: string;
+}
+
+interface WebhookEvent {
+  id: string;
+  event_type: string;
+  stripe_event_id: string;
+  status: 'processed' | 'failed' | 'pending';
+  created_at: string;
+  error_message?: string | null;
+}
+
+interface SyncResult {
+  health: 'healthy' | 'degraded' | 'critical';
+  checks: DiagnosticCheck[];
+  subscription_snapshot: {
+    status: string;
+    plan: string;
+    stripe_customer_id: string | null;
+    current_period_end: number | null;
+  } | null;
+  recent_events: WebhookEvent[];
+}
+
+const PLACEHOLDER_RESULT: SyncResult = {
+  health: 'healthy',
+  checks: [
+    { label: 'Webhook endpoint reachable', passed: true, detail: 'Endpoint responded with 200' },
+    { label: 'Subscription record exists', passed: true, detail: 'Active subscription found in Supabase' },
+    { label: 'Stripe customer linked', passed: true, detail: 'cus_placeholder123' },
+    { label: 'No recent failures', passed: true, detail: '0 failures in the last 24 hours' },
+    { label: 'Period end in sync', passed: false, detail: 'Supabase period_end is 2 minutes behind Stripe' },
+  ],
+  subscription_snapshot: {
+    status: 'active',
+    plan: 'premium',
+    stripe_customer_id: 'cus_placeholder123',
+    current_period_end: Math.floor(Date.now() / 1000) + 86400 * 30,
+  },
+  recent_events: [
+    {
+      id: 'evt_ph_1',
+      event_type: 'invoice.payment_succeeded',
+      stripe_event_id: 'evt_placeholder_abc123',
+      status: 'processed',
+      created_at: new Date(Date.now() - 3600000).toISOString(),
+      error_message: null,
+    },
+    {
+      id: 'evt_ph_2',
+      event_type: 'customer.subscription.updated',
+      stripe_event_id: 'evt_placeholder_def456',
+      status: 'processed',
+      created_at: new Date(Date.now() - 7200000).toISOString(),
+      error_message: null,
+    },
+    {
+      id: 'evt_ph_3',
+      event_type: 'invoice.payment_failed',
+      stripe_event_id: 'evt_placeholder_ghi789',
+      status: 'failed',
+      created_at: new Date(Date.now() - 86400000).toISOString(),
+      error_message: 'Card declined: insufficient funds',
+    },
+  ],
+};
+
+const HEALTH_CONFIG: Record<
+  string,
+  { color: string; bg: string; icon: string; label: string }
+> = {
+  healthy: { color: '#4ade80', bg: 'rgba(34,197,94,0.12)', icon: '✓', label: 'Healthy' },
+  degraded: { color: '#facc15', bg: 'rgba(234,179,8,0.12)', icon: '⚠', label: 'Degraded' },
+  critical: { color: '#f87171', bg: 'rgba(239,68,68,0.12)', icon: '✕', label: 'Critical' },
+};
+
+const EVENT_STATUS_DOT: Record<string, string> = {
+  processed: '#4ade80',
+  failed: '#f87171',
+  pending: '#facc15',
+};
+
+const WebhookSyncChecker: React.FC = () => {
+  const { loading: paymentLoading } = usePayment();
+  const [result, setResult] = useState<SyncResult | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isPlaceholder, setIsPlaceholder] = useState(false);
+  const [showEvents, setShowEvents] = useState(false);
+
+  const runCheck = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        'check-webhook-sync'
+      );
+      if (error) throw error;
+      if (data && data.health && data.checks) {
+        setResult(data as SyncResult);
+        setIsPlaceholder(false);
+      } else {
+        throw new Error('Invalid response');
+      }
+    } catch {
+      setResult(PLACEHOLDER_RESULT);
+      setIsPlaceholder(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    runCheck();
+  }, [runCheck]);
+
+  if (paymentLoading || loading) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.header}>
+          <h2 style={styles.title}>Webhook Sync Diagnostics</h2>
+        </div>
+        <div style={styles.loadingBox}>
+          <div style={styles.spinner} />
+          <p style={styles.loadingText}>Running diagnostics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!result) return null;
+
+  const healthCfg = HEALTH_CONFIG[result.health] || HEALTH_CONFIG.critical;
+  const snap = result.subscription_snapshot;
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <h2 style={styles.title}>Webhook Sync Diagnostics</h2>
+        <button onClick={runCheck} style={styles.recheckBtn}>
+          Re-check
+        </button>
+      </div>
+
+      {isPlaceholder && (
+        <div style={styles.placeholderBanner}>
+          <span>⚙️</span>
+          <span>
+            Placeholder data — connect the{' '}
+            <code style={styles.code}>check-webhook-sync</code> edge function
+            for live diagnostics.
+          </span>
+        </div>
+      )}
+
+      {/* Health Indicator */}
+      <div
+        style={{
+          ...styles.healthBadge,
+          background: healthCfg.bg,
+          borderColor: healthCfg.color + '33',
+        }}
+      >
+        <span style={{ color: healthCfg.color, fontSize: '1.3rem', fontWeight: 700 }}>
+          {healthCfg.icon}
+        </span>
+        <span style={{ color: healthCfg.color, fontWeight: 600, fontSize: '1.05rem' }}>
+          {healthCfg.label}
+        </span>
+      </div>
+
+      {/* Diagnostic Checks */}
+      <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>Diagnostic Checks</h3>
+        <div style={styles.checkList}>
+          {result.checks.map((check, i) => (
+            <div key={i} style={styles.checkRow}>
+              <span
+                style={{
+                  ...styles.checkIcon,
+                  color: check.passed ? '#4ade80' : '#f87171',
+                }}
+              >
+                {check.passed ? '✓' : '✕'}
+              </span>
+              <div style={styles.checkContent}>
+                <span style={styles.checkLabel}>{check.label}</span>
+                {check.detail && (
+                  <span style={styles.checkDetail}>{check.detail}</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Subscription Snapshot */}
+      {snap && (
+        <div style={styles.section}>
+          <h3 style={styles.sectionTitle}>Subscription Snapshot</h3>
+          <div style={styles.snapGrid}>
+            <div style={styles.snapItem}>
+              <span style={styles.snapLabel}>Status</span>
+              <span style={styles.snapValue}>{snap.status}</span>
+            </div>
+            <div style={styles.snapItem}>
+              <span style={styles.snapLabel}>Plan</span>
+              <span style={styles.snapValue}>{snap.plan}</span>
+            </div>
+            <div style={styles.snapItem}>
+              <span style={styles.snapLabel}>Stripe Customer</span>
+              <span style={styles.snapValue}>
+                {snap.stripe_customer_id || '—'}
+              </span>
+            </div>
+            <div style={styles.snapItem}>
+              <span style={styles.snapLabel}>Period End</span>
+              <span style={styles.snapValue}>
+                {snap.current_period_end
+                  ? new Date(
+                      snap.current_period_end * 1000
+                    ).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })
+                  : '—'}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Webhook Event Log */}
+      {result.recent_events.length > 0 && (
+        <div style={styles.section}>
+          <button
+            onClick={() => setShowEvents(!showEvents)}
+            style={styles.expandBtn}
+          >
+            <h3 style={{ ...styles.sectionTitle, margin: 0 }}>
+              Webhook Event Log ({result.recent_events.length})
+            </h3>
+            <span style={styles.expandArrow}>
+              {showEvents ? '▲' : '▼'}
+            </span>
+          </button>
+          {showEvents && (
+            <div style={styles.eventList}>
+              {result.recent_events.map((evt) => (
+                <div key={evt.id} style={styles.eventRow}>
+                  <span
+                    style={{
+                      ...styles.statusDot,
+                      background:
+                        EVENT_STATUS_DOT[evt.status] || '#64748b',
+                    }}
+                  />
+                  <div style={styles.eventContent}>
+                    <div style={styles.eventTop}>
+                      <span style={styles.eventType}>
+                        {evt.event_type}
+                      </span>
+                      <span style={styles.eventTime}>
+                        {new Date(evt.created_at).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </div>
+                    <span style={styles.eventId}>
+                      {evt.stripe_event_id}
+                    </span>
+                    {evt.error_message && (
+                      <span style={styles.eventError}>
+                        {evt.error_message}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    maxWidth: '800px',
+    margin: '0 auto',
+    padding: '2.5rem 1.5rem',
+    fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+    color: '#e2e0f0',
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '1.5rem',
+  },
+  title: {
+    fontSize: '1.6rem',
+    fontWeight: 700,
+    color: '#e2e0f0',
+    margin: 0,
+  },
+  recheckBtn: {
+    padding: '0.5rem 1.25rem',
+    fontSize: '0.85rem',
+    fontWeight: 600,
+    color: '#c4b5fd',
+    background: 'rgba(124, 58, 237, 0.1)',
+    border: '1px solid rgba(124, 58, 237, 0.2)',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    transition: 'background 0.2s ease',
+  },
+  placeholderBanner: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.6rem',
+    padding: '0.75rem 1rem',
+    background: 'rgba(234, 179, 8, 0.08)',
+    border: '1px solid rgba(234, 179, 8, 0.2)',
+    borderRadius: '10px',
+    fontSize: '0.85rem',
+    color: '#facc15',
+    marginBottom: '1.25rem',
+  },
+  code: {
+    background: 'rgba(255,255,255,0.06)',
+    padding: '0.15rem 0.4rem',
+    borderRadius: '4px',
+    fontSize: '0.82rem',
+    fontFamily: "'Fira Code', 'Consolas', monospace",
+  },
+  healthBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.6rem',
+    padding: '0.65rem 1.25rem',
+    borderRadius: '12px',
+    border: '1px solid',
+    marginBottom: '2rem',
+  },
+  section: {
+    marginBottom: '2rem',
+  },
+  sectionTitle: {
+    fontWeight: 600,
+    color: '#a78bfa',
+    marginBottom: '0.85rem',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
+    fontSize: '0.8rem',
+  },
+  checkList: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.6rem',
+  },
+  checkRow: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '0.75rem',
+    padding: '0.7rem 1rem',
+    background: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: '10px',
+    border: '1px solid rgba(124, 58, 237, 0.06)',
+  },
+  checkIcon: {
+    fontSize: '1rem',
+    fontWeight: 700,
+    marginTop: '0.1rem',
+    flexShrink: 0,
+  },
+  checkContent: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.15rem',
+  },
+  checkLabel: {
+    fontSize: '0.9rem',
+    fontWeight: 500,
+    color: '#e2e0f0',
+  },
+  checkDetail: {
+    fontSize: '0.8rem',
+    color: '#8b80b0',
+  },
+  snapGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+    gap: '0.75rem',
+  },
+  snapItem: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    padding: '0.85rem 1rem',
+    background: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: '10px',
+    border: '1px solid rgba(124, 58, 237, 0.06)',
+  },
+  snapLabel: {
+    fontSize: '0.72rem',
+    fontWeight: 600,
+    color: '#6b5fa0',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
+    marginBottom: '0.3rem',
+  },
+  snapValue: {
+    fontSize: '0.95rem',
+    fontWeight: 500,
+    color: '#c4b5fd',
+  },
+  expandBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '0.5rem 0',
+    marginBottom: '0.75rem',
+  },
+  expandArrow: {
+    fontSize: '0.75rem',
+    color: '#8b80b0',
+  },
+  eventList: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.5rem',
+  },
+  eventRow: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '0.75rem',
+    padding: '0.7rem 1rem',
+    background: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: '10px',
+    border: '1px solid rgba(124, 58, 237, 0.06)',
+  },
+  statusDot: {
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%',
+    marginTop: '0.45rem',
+    flexShrink: 0,
+  },
+  eventContent: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.2rem',
+    flex: 1,
+    minWidth: 0,
+  },
+  eventTop: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  eventType: {
+    fontSize: '0.88rem',
+    fontWeight: 500,
+    color: '#e2e0f0',
+  },
+  eventTime: {
+    fontSize: '0.75rem',
+    color: '#6b5fa0',
+    flexShrink: 0,
+  },
+  eventId: {
+    fontSize: '0.75rem',
+    color: '#5a5280',
+    fontFamily: "'Fira Code', 'Consolas', monospace",
+  },
+  eventError: {
+    fontSize: '0.78rem',
+    color: '#f87171',
+    marginTop: '0.2rem',
+  },
+  loadingBox: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    padding: '3rem',
+    gap: '1rem',
+  },
+  spinner: {
+    width: '32px',
+    height: '32px',
+    border: '3px solid rgba(124, 58, 237, 0.2)',
+    borderTopColor: '#7c3aed',
+    borderRadius: '50%',
+    animation: 'spin 0.8s linear infinite',
+  },
+  loadingText: {
+    fontSize: '0.95rem',
+    color: '#8b80b0',
+    fontStyle: 'italic',
+  },
+};
+
+export default WebhookSyncChecker;
