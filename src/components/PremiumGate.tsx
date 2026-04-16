@@ -1,5 +1,6 @@
 import React from 'react';
 import { usePayment } from '../context/PaymentContext';
+import { useSeraphine } from '../hooks/useSeraphine';
 
 type PlanTier = 'free' | 'basic' | 'premium' | 'mythic';
 
@@ -38,11 +39,13 @@ const PremiumGate: React.FC<PremiumGateProps> = ({
   children,
 }) => {
   const { subscription, isSubscribed, loading } = usePayment();
+  const { speak } = useSeraphine('premiumGate');
 
   if (loading) {
     return (
       <div style={styles.loadingContainer}>
         <div style={styles.spinner} />
+        <p style={styles.loadingText}>{speak('loading').text}</p>
       </div>
     );
   }
@@ -66,10 +69,7 @@ const PremiumGate: React.FC<PremiumGateProps> = ({
       <div style={styles.gateCard}>
         <div style={styles.lockIcon}>🔒</div>
         <h3 style={styles.gateTitle}>{requiredLabel} Content</h3>
-        <p style={styles.gateMessage}>
-          This content requires a {requiredLabel} subscription or higher to
-          access.
-        </p>
+        <p style={styles.gateMessage}>{speak('locked').text}</p>
         {onUpgrade && (
           <button onClick={onUpgrade} style={styles.upgradeButton}>
             Upgrade to {requiredLabel}
@@ -105,6 +105,13 @@ const styles: Record<string, React.CSSProperties> = {
     borderTopColor: '#7c3aed',
     borderRadius: '50%',
     animation: 'spin 0.8s linear infinite',
+  },
+  loadingText: {
+    marginTop: '0.75rem',
+    fontSize: '0.9rem',
+    color: '#a78bfa',
+    fontStyle: 'italic',
+    opacity: 0.7,
   },
   blurWrapper: {
     position: 'relative',
