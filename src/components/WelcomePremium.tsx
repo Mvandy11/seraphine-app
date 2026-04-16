@@ -32,7 +32,7 @@ const FEATURES = [
 
 const WelcomePremium: React.FC<WelcomePremiumProps> = ({ onContinue }) => {
   const { subscription, isSubscribed, loading } = usePayment();
-  const { name, speak } = useSeraphine('welcomePremium');
+  const { name, speak, artSlots } = useSeraphine('welcomePremium');
   const [revealedFeatures, setRevealedFeatures] = useState<number>(0);
 
   useEffect(() => {
