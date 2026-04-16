@@ -7,6 +7,8 @@ import {
   createSetupIntent,
   startSubscription,
 } from "@/services/subscriptionService";
+import { useSeraphine } from "@/hooks/useSeraphine";
+import SeraphineMessage from "@/components/SeraphineMessage";
 
 type Props = {
   user: { id: string; email: string | null } | null;
@@ -15,6 +17,7 @@ type Props = {
 const SubscribeTab: React.FC<Props> = ({ user }) => {
   const stripe = useStripe();
   const elements = useElements();
+  const { speak, artSlots } = useSeraphine('subscribeTab');
 
   const {
     status,
@@ -78,6 +81,8 @@ const SubscribeTab: React.FC<Props> = ({ user }) => {
 
   return (
     <div style={{ maxWidth: 420 }}>
+      <SeraphineMessage entry={speak('greeting')} className="mb-2" />
+      <SeraphineMessage entry={speak('active')} className="mb-4" />
       <h2>Full Access Membership</h2>
       <p>Unlocks all features. Cancel anytime.</p>
 
