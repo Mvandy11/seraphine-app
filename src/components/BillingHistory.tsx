@@ -1,0 +1,361 @@
+import React, { useEffect, useState } from 'react';
+import { usePayment } from '../context/PaymentContext';
+import { supabase } from '../lib/supabaseClient';
+
+interface Invoice {
+  id: string;
+  created: number;
+  description: string | null;
+  amount_due: number;
+  currency: string;
+  status: 'paid' | 'open' | 'draft' | 'void' | 'uncollectible';
+  hosted_invoice_url: string | null;
+  invoice_pdf: string | null;
+}
+
+const PLACEHOLDER_INVOICES: Invoice[] = [
+  {
+    id: 'inv_placeholder_1',
+    created: Math.floor(Date.now() / 1000) - 86400 * 30,
+    description: 'Premium Plan — Monthly',
+    amount_due: 1499,
+    currency: 'usd',
+    status: 'paid',
+    hosted_invoice_url: null,
+    invoice_pdf: null,
+  },
+  {
+    id: 'inv_placeholder_2',
+    created: Math.floor(Date.now() / 1000) - 86400 * 60,
+    description: 'Premium Plan — Monthly',
+    amount_due: 1499,
+    currency: 'usd',
+    status: 'paid',
+    hosted_invoice_url: null,
+    invoice_pdf: null,
+  },
+  {
+    id: 'inv_placeholder_3',
+    created: Math.floor(Date.now() / 1000) - 86400 * 90,
+    description: 'Basic Plan — Monthly',
+    amount_due: 799,
+    currency: 'usd',
+    status: 'paid',
+    hosted_invoice_url: null,
+    invoice_pdf: null,
+  },
+];
+
+const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
+  paid: { bg: 'rgba(34, 197, 94, 0.15)', text: '#4ade80' },
+  open: { bg: 'rgba(234, 179, 8, 0.15)', text: '#facc15' },
+  draft: { bg: 'rgba(148, 163, 184, 0.15)', text: '#94a3b8' },
+  void: { bg: 'rgba(148, 163, 184, 0.15)', text: '#64748b' },
+  uncollectible: { bg: 'rgba(239, 68, 68, 0.15)', text: '#f87171' },
+};
+
+const formatCurrency = (amount: number, currency: string): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+  }).format(amount / 100);
+};
+
+const formatDate = (unix: number): string => {
+  return new Date(unix * 1000).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+};
+
+const BillingHistory: React.FC = () => {
+  const { isSubscribed, loading: paymentLoading } = usePayment();
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isPlaceholder, setIsPlaceholder] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      try {
+        const { data, error: fnError } = await supabase.functions.invoke(
+          'get-billing-history'
+        );
+
+        if (fnError) throw fnError;
+
+        if (data?.invoices && Array.isArray(data.invoices)) {
+          setInvoices(data.invoices);
+          setIsPlaceholder(false);
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } catch {
+        setInvoices(PLACEHOLDER_INVOICES);
+        setIsPlaceholder(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInvoices();
+  }, []);
+
+  if (paymentLoading || loading) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.header}>
+          <h2 style={styles.title}>Billing History</h2>
+        </div>
+        <div style={styles.skeletonList}>
+          {[1, 2, 3].map((i) => (
+            <div key={i} style={styles.skeletonRow} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!isSubscribed) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.header}>
+          <h2 style={styles.title}>Billing History</h2>
+        </div>
+        <div style={styles.emptyState}>
+          <p style={styles.emptyText}>
+            No billing history yet. Subscribe to get started.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const totalPaid = invoices
+    .filter((inv) => inv.status === 'paid')
+    .reduce((sum, inv) => sum + inv.amount_due, 0);
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <h2 style={styles.title}>Billing History</h2>
+        <p style={styles.subtitle}>
+          {invoices.length} invoice{invoices.length !== 1 ? 's' : ''}
+          {totalPaid > 0 &&
+            ` · ${formatCurrency(totalPaid, invoices[0]?.currency || 'usd')} paid`}
+        </p>
+      </div>
+
+      {isPlaceholder && (
+        <div style={styles.placeholderBanner}>
+          <span style={styles.bannerIcon}>⚙️</span>
+          <span>
+            Placeholder data — connect the{' '}
+            <code style={styles.code}>get-billing-history</code> edge function
+            to display real invoices.
+          </span>
+        </div>
+      )}
+
+      {error && <div style={styles.errorBanner}>{error}</div>}
+
+      <div style={styles.tableWrapper}>
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th style={{ ...styles.th, textAlign: 'left' }}>Date</th>
+              <th style={{ ...styles.th, textAlign: 'left' }}>Description</th>
+              <th style={{ ...styles.th, textAlign: 'right' }}>Amount</th>
+              <th style={{ ...styles.th, textAlign: 'center' }}>Status</th>
+              <th style={{ ...styles.th, textAlign: 'right' }}>Invoice</th>
+            </tr>
+          </thead>
+          <tbody>
+            {invoices.map((invoice) => {
+              const statusStyle =
+                STATUS_COLORS[invoice.status] || STATUS_COLORS.draft;
+              return (
+                <tr key={invoice.id} style={styles.tr}>
+                  <td style={styles.td}>{formatDate(invoice.created)}</td>
+                  <td style={styles.td}>
+                    {invoice.description || 'Subscription charge'}
+                  </td>
+                  <td
+                    style={{
+                      ...styles.td,
+                      textAlign: 'right',
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {formatCurrency(invoice.amount_due, invoice.currency)}
+                  </td>
+                  <td style={{ ...styles.td, textAlign: 'center' }}>
+                    <span
+                      style={{
+                        ...styles.statusBadge,
+                        background: statusStyle.bg,
+                        color: statusStyle.text,
+                      }}
+                    >
+                      {invoice.status.charAt(0).toUpperCase() +
+                        invoice.status.slice(1)}
+                    </span>
+                  </td>
+                  <td style={{ ...styles.td, textAlign: 'right' }}>
+                    {invoice.hosted_invoice_url ? (
+                      <a
+                        href={invoice.hosted_invoice_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={styles.link}
+                      >
+                        View
+                      </a>
+                    ) : invoice.invoice_pdf ? (
+                      <a
+                        href={invoice.invoice_pdf}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={styles.link}
+                      >
+                        PDF
+                      </a>
+                    ) : (
+                      <span style={styles.noLink}>—</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    maxWidth: '960px',
+    margin: '0 auto',
+    padding: '2.5rem 1.5rem',
+    fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+    color: '#e2e0f0',
+  },
+  header: {
+    marginBottom: '1.5rem',
+  },
+  title: {
+    fontSize: '1.8rem',
+    fontWeight: 700,
+    color: '#e2e0f0',
+    margin: 0,
+  },
+  subtitle: {
+    fontSize: '0.9rem',
+    color: '#8b80b0',
+    marginTop: '0.35rem',
+  },
+  placeholderBanner: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.6rem',
+    padding: '0.75rem 1rem',
+    background: 'rgba(234, 179, 8, 0.08)',
+    border: '1px solid rgba(234, 179, 8, 0.2)',
+    borderRadius: '10px',
+    fontSize: '0.85rem',
+    color: '#facc15',
+    marginBottom: '1.25rem',
+  },
+  bannerIcon: {
+    fontSize: '1.1rem',
+    flexShrink: 0,
+  },
+  code: {
+    background: 'rgba(255,255,255,0.06)',
+    padding: '0.15rem 0.4rem',
+    borderRadius: '4px',
+    fontSize: '0.82rem',
+    fontFamily: "'Fira Code', 'Consolas', monospace",
+  },
+  errorBanner: {
+    padding: '0.75rem 1rem',
+    background: 'rgba(239, 68, 68, 0.1)',
+    border: '1px solid rgba(239, 68, 68, 0.25)',
+    borderRadius: '10px',
+    fontSize: '0.85rem',
+    color: '#f87171',
+    marginBottom: '1.25rem',
+  },
+  tableWrapper: {
+    background: 'rgba(255, 255, 255, 0.02)',
+    border: '1px solid rgba(124, 58, 237, 0.1)',
+    borderRadius: '16px',
+    overflow: 'hidden',
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse' as const,
+  },
+  th: {
+    padding: '0.85rem 1rem',
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    color: '#6b5fa0',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.06em',
+    borderBottom: '1px solid rgba(124, 58, 237, 0.08)',
+  },
+  tr: {
+    borderBottom: '1px solid rgba(124, 58, 237, 0.05)',
+  },
+  td: {
+    padding: '0.85rem 1rem',
+    fontSize: '0.9rem',
+    color: '#c4b5fd',
+  },
+  statusBadge: {
+    display: 'inline-block',
+    padding: '0.2rem 0.65rem',
+    borderRadius: '999px',
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.04em',
+  },
+  link: {
+    color: '#a78bfa',
+    textDecoration: 'none',
+    fontWeight: 500,
+    fontSize: '0.85rem',
+  },
+  noLink: {
+    color: '#4a4565',
+  },
+  emptyState: {
+    textAlign: 'center' as const,
+    padding: '3rem',
+    background: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: '16px',
+    border: '1px solid rgba(124, 58, 237, 0.08)',
+  },
+  emptyText: {
+    color: '#8b80b0',
+    fontSize: '1rem',
+  },
+  skeletonList: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.75rem',
+  },
+  skeletonRow: {
+    height: '52px',
+    borderRadius: '10px',
+    background: 'rgba(124, 58, 237, 0.06)',
+    animation: 'pulse 1.5s ease-in-out infinite',
+  },
+};
+
+export default BillingHistory;
