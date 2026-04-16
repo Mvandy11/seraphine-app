@@ -1,0 +1,171 @@
+import React from 'react';
+import { usePayment } from '../context/PaymentContext';
+
+type PlanTier = 'free' | 'basic' | 'premium' | 'mythic';
+
+interface PremiumGateProps {
+  requiredPlan?: PlanTier;
+  blurPreview?: boolean;
+  silent?: boolean;
+  fallback?: React.ReactNode;
+  onUpgrade?: () => void;
+  children: React.ReactNode;
+}
+
+const TIER_RANK: Record<PlanTier, number> = {
+  free: 0,
+  basic: 1,
+  premium: 2,
+  mythic: 3,
+};
+
+function meetsRequirement(
+  currentPlan: string | undefined,
+  requiredPlan: PlanTier
+): boolean {
+  if (!currentPlan) return false;
+  const currentRank = TIER_RANK[currentPlan as PlanTier] ?? -1;
+  const requiredRank = TIER_RANK[requiredPlan] ?? 0;
+  return currentRank >= requiredRank;
+}
+
+const PremiumGate: React.FC<PremiumGateProps> = ({
+  requiredPlan = 'premium',
+  blurPreview = false,
+  silent = false,
+  fallback,
+  onUpgrade,
+  children,
+}) => {
+  const { subscription, isSubscribed, loading } = usePayment();
+
+  if (loading) {
+    return (
+      <div style={styles.loadingContainer}>
+        <div style={styles.spinner} />
+      </div>
+    );
+  }
+
+  const hasAccess =
+    isSubscribed && meetsRequirement(subscription?.plan, requiredPlan);
+
+  if (hasAccess) {
+    return <>{children}</>;
+  }
+
+  if (silent) return null;
+
+  if (fallback) return <>{fallback}</>;
+
+  const requiredLabel =
+    requiredPlan.charAt(0).toUpperCase() + requiredPlan.slice(1);
+
+  const gateOverlay = (
+    <div style={styles.gateOverlay}>
+      <div style={styles.gateCard}>
+        <div style={styles.lockIcon}>🔒</div>
+        <h3 style={styles.gateTitle}>{requiredLabel} Content</h3>
+        <p style={styles.gateMessage}>
+          This content requires a {requiredLabel} subscription or higher to
+          access.
+        </p>
+        {onUpgrade && (
+          <button onClick={onUpgrade} style={styles.upgradeButton}>
+            Upgrade to {requiredLabel}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  if (blurPreview) {
+    return (
+      <div style={styles.blurWrapper}>
+        <div style={styles.blurredContent}>{children}</div>
+        {gateOverlay}
+      </div>
+    );
+  }
+
+  return gateOverlay;
+};
+
+const styles: Record<string, React.CSSProperties> = {
+  loadingContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '3rem',
+  },
+  spinner: {
+    width: '32px',
+    height: '32px',
+    border: '3px solid rgba(124, 58, 237, 0.2)',
+    borderTopColor: '#7c3aed',
+    borderRadius: '50%',
+    animation: 'spin 0.8s linear infinite',
+  },
+  blurWrapper: {
+    position: 'relative',
+    overflow: 'hidden',
+    borderRadius: '16px',
+  },
+  blurredContent: {
+    filter: 'blur(8px)',
+    opacity: 0.4,
+    pointerEvents: 'none' as const,
+    userSelect: 'none' as const,
+  },
+  gateOverlay: {
+    position: 'absolute' as const,
+    inset: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'rgba(10, 10, 18, 0.6)',
+    backdropFilter: 'blur(4px)',
+    zIndex: 10,
+  },
+  gateCard: {
+    background: 'rgba(255, 255, 255, 0.04)',
+    backdropFilter: 'blur(16px)',
+    border: '1px solid rgba(124, 58, 237, 0.2)',
+    borderRadius: '20px',
+    padding: '2.5rem',
+    textAlign: 'center' as const,
+    maxWidth: '380px',
+    width: '90%',
+    fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+  },
+  lockIcon: {
+    fontSize: '2.5rem',
+    marginBottom: '1rem',
+  },
+  gateTitle: {
+    fontSize: '1.3rem',
+    fontWeight: 700,
+    color: '#e2e0f0',
+    marginBottom: '0.5rem',
+  },
+  gateMessage: {
+    fontSize: '0.9rem',
+    color: '#8b80b0',
+    lineHeight: 1.6,
+    marginBottom: '1.5rem',
+  },
+  upgradeButton: {
+    padding: '0.75rem 2rem',
+    fontSize: '0.95rem',
+    fontWeight: 600,
+    color: '#fff',
+    background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+    boxShadow: '0 0 16px rgba(124, 58, 237, 0.25)',
+  },
+};
+
+export default PremiumGate;
