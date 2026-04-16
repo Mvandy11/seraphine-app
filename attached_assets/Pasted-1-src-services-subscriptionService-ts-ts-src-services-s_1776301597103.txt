@@ -1,0 +1,257 @@
+1. src/services/subscriptionService.ts
+ts
+// src/services/subscriptionService.ts
+
+const EDGE_FUNCTION_URL =
+  "https://bxxvgumwlfhfzhmqvxsh.supabase.co/functions/v1/create-subscription";
+
+type CreateSetupIntentResponse = {
+  clientSecret: string;
+};
+
+type StartSubscriptionResponse = {
+  status: string;
+  subscription: any;
+};
+
+type CancelSubscriptionResponse = {
+  status: string;
+  subscription?: any;
+};
+
+export async function createSetupIntent(userId: string, email: string) {
+  const res = await fetch(EDGE_FUNCTION_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userId,
+      email,
+      action: "create_setup_intent",
+    }),
+  });
+
+  if (!res.ok) throw new Error("Failed to create SetupIntent");
+  const data = (await res.json()) as CreateSetupIntentResponse;
+  return data.clientSecret;
+}
+
+export async function startSubscription(
+  userId: string,
+  email: string,
+  paymentMethodId: string
+) {
+  const res = await fetch(EDGE_FUNCTION_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userId,
+      email,
+      paymentMethodId,
+      action: "start_subscription",
+    }),
+  });
+
+  if (!res.ok) throw new Error("Failed to start subscription");
+  const data = (await res.json()) as StartSubscriptionResponse;
+  return data;
+}
+
+export async function cancelSubscription(userId: string, email: string) {
+  const res = await fetch(EDGE_FUNCTION_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userId,
+      email,
+      action: "cancel",
+    }),
+  });
+
+  if (!res.ok) throw new Error("Failed to cancel subscription");
+  const data = (await res.json()) as CancelSubscriptionResponse;
+  return data;
+}
+2. src/context/PaymentContext.tsx
+Assumes you already have user from Supabase auth with id and email.
+
+tsx
+// src/context/PaymentContext.tsx
+
+import React, { createContext, useContext, useState, useEffect } from "react";
+import {
+  createSetupIntent,
+  startSubscription,
+  cancelSubscription,
+} from "../services/subscriptionService";
+
+type SubscriptionStatus = "none" | "active" | "canceling";
+
+type PaymentContextValue = {
+  status: SubscriptionStatus;
+  isLoading: boolean;
+  subscribe: (paymentMethodId: string) => Promise<void>;
+  cancel: () => Promise<void>;
+};
+
+const PaymentContext = createContext<PaymentContextValue | undefined>(undefined);
+
+type Props = {
+  user: { id: string; email: string | null } | null;
+  children: React.ReactNode;
+};
+
+export const PaymentProvider: React.FC<Props> = ({ user, children }) => {
+  const [status, setStatus] = useState<SubscriptionStatus>("none");
+  const [isLoading, setIsLoading] = useState(false);
+
+  // TODO: Optionally fetch subscription status from Supabase on mount
+  useEffect(() => {
+    // Example placeholder:
+    // fetchSubscriptionStatus(user?.id).then(setStatus);
+  }, [user?.id]);
+
+  const subscribe = async (paymentMethodId: string) => {
+    if (!user || !user.email) return;
+    setIsLoading(true);
+    try {
+      const res = await startSubscription(user.id, user.email, paymentMethodId);
+      if (res.status === "active") {
+        setStatus("active");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const cancel = async () => {
+    if (!user || !user.email) return;
+    setIsLoading(true);
+    try {
+      const res = await cancelSubscription(user.id, user.email);
+      if (res.status === "canceled") {
+        setStatus("canceling"); // active until period end
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <PaymentContext.Provider value={{ status, isLoading, subscribe, cancel }}>
+      {children}
+    </PaymentContext.Provider>
+  );
+};
+
+export function usePayment() {
+  const ctx = useContext(PaymentContext);
+  if (!ctx) throw new Error("usePayment must be used within PaymentProvider");
+  return ctx;
+}
+3. src/components/SubscribeTab.tsx
+This assumes you’re using Stripe.js + Elements on the frontend.
+
+tsx
+// src/components/SubscribeTab.tsx
+
+import React, { useState } from "react";
+import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
+import { usePayment } from "../context/PaymentContext";
+import { createSetupIntent } from "../services/subscriptionService";
+
+type Props = {
+  user: { id: string; email: string | null } | null;
+};
+
+const SubscribeTab: React.FC<Props> = ({ user }) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const { status, isLoading, subscribe, cancel } = usePayment();
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubscribe = async () => {
+    if (!stripe || !elements || !user || !user.email) return;
+    setError(null);
+
+    try {
+      // 1. Create SetupIntent
+      const clientSecret = await createSetupIntent(user.id, user.email);
+
+      // 2. Confirm card setup
+      const cardElement = elements.getElement(CardElement);
+      if (!cardElement) throw new Error("Card element not found");
+
+      const result = await stripe.confirmCardSetup(clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            email: user.email,
+          },
+        },
+      });
+
+      if (result.error || !result.setupIntent?.payment_method) {
+        throw new Error(result.error?.message || "Failed to confirm card");
+      }
+
+      const paymentMethodId = result.setupIntent.payment_method as string;
+
+      // 3. Start subscription
+      await subscribe(paymentMethodId);
+    } catch (err: any) {
+      setError(err.message || "Subscription failed");
+    }
+  };
+
+  const handleCancel = async () => {
+    setError(null);
+    try {
+      await cancel();
+    } catch (err: any) {
+      setError(err.message || "Cancel failed");
+    }
+  };
+
+  if (!user) {
+    return <div>Please sign in to manage your membership.</div>;
+  }
+
+  return (
+    <div style={{ maxWidth: 420 }}>
+      <h2>Full Access Membership</h2>
+      <p>Unlocks all features. Cancel anytime. No refunds for current period.</p>
+
+      {status === "none" && (
+        <>
+          <div style={{ margin: "16px 0" }}>
+            <CardElement />
+          </div>
+          <button onClick={handleSubscribe} disabled={isLoading || !stripe}>
+            {isLoading ? "Processing..." : "Subscribe"}
+          </button>
+        </>
+      )}
+
+      {status === "active" && (
+        <>
+          <p>Your membership is active.</p>
+          <button onClick={handleCancel} disabled={isLoading}>
+            {isLoading ? "Processing..." : "Cancel Membership"}
+          </button>
+        </>
+      )}
+
+      {status === "canceling" && (
+        <>
+          <p>
+            Your membership will end at the end of the current billing period.
+          </p>
+        </>
+      )}
+
+      {error && <p style={{ color: "red" }}>{error}</p>}
+    </div>
+  );
+};
+
+export default SubscribeTab;
