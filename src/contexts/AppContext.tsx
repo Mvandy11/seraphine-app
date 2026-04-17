@@ -6,6 +6,10 @@ interface AppContextValue {
   loading: boolean;
   setLoading: (v: boolean) => void;
   signOut: () => void;
+  showAuthModal: boolean;
+  setShowAuthModal: (v: boolean) => void;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -13,10 +17,20 @@ const AppContext = createContext<AppContextValue | null>(null);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const signOut = () => {
     setUser(null);
-    // If you later add Supabase/Auth0/Firebase, hook it here.
+  };
+
+  const signIn = async (email: string, _password: string) => {
+    setUser({ email });
+    setShowAuthModal(false);
+  };
+
+  const signUp = async (email: string, _password: string) => {
+    setUser({ email });
+    setShowAuthModal(false);
   };
 
   return (
@@ -27,6 +41,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         loading,
         setLoading,
         signOut,
+        showAuthModal,
+        setShowAuthModal,
+        signIn,
+        signUp,
       }}
     >
       {children}
@@ -40,5 +58,4 @@ export function useAppContext() {
   return ctx;
 }
 
-
-
+export const useApp = useAppContext;

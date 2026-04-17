@@ -2,7 +2,7 @@
 
 import { decks } from "@/data/decks";
 
-export function drawCard(deckName = "major") {
+export function drawCard(deckName: keyof typeof decks = "major") {
   const deck = decks[deckName];
   if (!deck) throw new Error(`Deck not found: ${deckName}`);
 

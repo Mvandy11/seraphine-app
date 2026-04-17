@@ -48,7 +48,7 @@ export const PaymentProvider: React.FC<Props> = ({ user, children }) => {
     if (!user || !user.email) return;
     setIsLoading(true);
     try {
-      const res = await startSubscription(user.id, user.email, paymentMethodId);
+      const res = await startSubscription(user.id, paymentMethodId);
       if (res.status === "active") {
         setStatus("active");
         setSubscription({
@@ -65,7 +65,7 @@ export const PaymentProvider: React.FC<Props> = ({ user, children }) => {
     if (!user || !user.email) return;
     setIsLoading(true);
     try {
-      const res = await cancelSubscription(user.id, user.email);
+      const res = await cancelSubscription(user.id);
       if (res.status === "canceled") {
         setStatus("canceling");
       }

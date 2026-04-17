@@ -11,10 +11,6 @@ export default function ReadingViewport() {
     return <div className="reading-viewport loading">Drawing your card...</div>;
   }
 
-  if (state.phase === "revealing") {
-    return <div className="reading-viewport revealing">Revealing your fate...</div>;
-  }
-
   if (state.phase === "complete") {
     return (
       <div className="reading-viewport result">
@@ -26,5 +22,3 @@ export default function ReadingViewport() {
 
   return null;
 }
-
-

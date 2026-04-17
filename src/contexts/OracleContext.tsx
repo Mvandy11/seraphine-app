@@ -1,5 +1,12 @@
 import { createContext, useContext, useState } from "react";
 
+interface OracleExplanation {
+  why: string;
+  symbolism: string;
+  relation: string;
+  guidance: string;
+}
+
 interface OracleState {
   question: string;
   answer: string | null;
@@ -7,6 +14,7 @@ interface OracleState {
   emotion: "serene" | "fierce" | "sorrow" | "ascended" | null;
   revealedCard: { id: string; name: string; image: string } | null;
   spread: any[] | null;
+  explanation: OracleExplanation | null;
 }
 
 interface OracleContextValue {
@@ -17,6 +25,7 @@ interface OracleContextValue {
   setEmotion: (e: OracleState["emotion"]) => void;
   setRevealedCard: (c: OracleState["revealedCard"]) => void;
   setSpread: (s: any[] | null) => void;
+  setExplanation: (e: OracleExplanation | null) => void;
 }
 
 const OracleContext = createContext<OracleContextValue | undefined>(undefined);
@@ -29,6 +38,7 @@ export function OracleProvider({ children }: { children: React.ReactNode }) {
     emotion: null,
     revealedCard: null,
     spread: null,
+    explanation: null,
   });
 
   const setQuestion = (question: string) =>
@@ -49,6 +59,9 @@ export function OracleProvider({ children }: { children: React.ReactNode }) {
   const setSpread = (spread: any[] | null) =>
     setState((s) => ({ ...s, spread }));
 
+  const setExplanation = (explanation: OracleExplanation | null) =>
+    setState((s) => ({ ...s, explanation }));
+
   return (
     <OracleContext.Provider
       value={{
@@ -59,6 +72,7 @@ export function OracleProvider({ children }: { children: React.ReactNode }) {
         setEmotion,
         setRevealedCard,
         setSpread,
+        setExplanation,
       }}
     >
       {children}

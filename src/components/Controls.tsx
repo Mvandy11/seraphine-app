@@ -1,15 +1,15 @@
 import { useOracleContext } from "@/contexts/OracleContext";
 
 export default function Controls() {
-  const { state, setPhase, reset } = useOracleContext();
+  const { state, setPhase } = useOracleContext();
 
   const handleDraw = () => {
     setPhase("drawing");
-    setTimeout(() => setPhase("revealing"), 1200);
+    setTimeout(() => setPhase("complete"), 1200);
   };
 
   const handleReset = () => {
-    reset();
+    setPhase("idle");
   };
 
   return (
@@ -24,5 +24,3 @@ export default function Controls() {
     </div>
   );
 }
-
-
