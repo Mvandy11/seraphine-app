@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
-import { usePaymentContext } from "@/contexts/PaymentContext";
+import { usePayment } from "@/context/PaymentContext";
 import {
   createSetupIntent,
   startSubscription,
@@ -22,10 +22,13 @@ const SubscribeTab: React.FC<Props> = ({ user }) => {
   const {
     status,
     loading,
-    refreshSubscription,
-    cancelMembership,
-    cancelAtPeriodEnd,
-  } = usePaymentContext();
+    cancel,
+    subscription,
+  } = usePayment();
+
+  const refreshSubscription = async () => {};
+  const cancelMembership = cancel;
+  const cancelAtPeriodEnd = !!(subscription as any)?.cancel_at_period_end;
 
   const [error, setError] = useState<string | null>(null);
 

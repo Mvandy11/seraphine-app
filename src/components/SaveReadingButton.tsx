@@ -13,6 +13,7 @@ interface Props {
     card?: any | null;
     emotion?: string | null;
     message: string;
+    birthday?: any;
   };
 }
 
