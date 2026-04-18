@@ -1,6 +1,6 @@
 export const SeraphineArt = {
-  idle: "/art/seraphine/idle.png",
-  focus: "/art/seraphine/focus.png",
-  interpret: "/art/seraphine/interpret.png",
-  reveal: "/art/seraphine/reveal.png",
+  idle:      "/art/seraphine/portrait.png",
+  focus:     "/art/seraphine/emotion/serene.png",
+  interpret: "/art/seraphine/emotion/ascended.png",
+  reveal:    "/art/seraphine/emotion/fierce.png",
 };

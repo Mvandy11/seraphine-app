@@ -2,6 +2,6 @@
 
 export function getSeraphineArt(_state: any) {
   return {
-    src: "/art/seraphine/primary.png" // update this path to your actual image
+    src: "/art/seraphine/portrait.png"
   };
 }
