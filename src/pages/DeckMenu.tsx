@@ -14,7 +14,7 @@ export default function DeckMenu() {
     <div
       style={{
         minHeight: "100vh",
-        backgroundImage: "url(/art/backgrounds/vault.jpg)",
+        backgroundImage: "url(/art/backgrounds/hero.jpg)",
         backgroundSize: "cover",
         backgroundPosition: "center",
         padding: "40px 20px",

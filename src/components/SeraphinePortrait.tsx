@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import "./SeraphinePortrait.css";
 
-const seraphineImg = "/placeholder.svg";
+const seraphineImg = "/art/seraphine/portrait.png";
 
 export default function SeraphinePortrait() {
   const containerRef = useRef<HTMLDivElement>(null);
