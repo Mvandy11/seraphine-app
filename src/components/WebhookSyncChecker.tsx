@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { usePayment } from '../context/PaymentContext';
+import { usePayment } from '@/contexts/PaymentContext';
 import { supabase } from '../lib/supabaseClient';
 
 interface DiagnosticCheck {

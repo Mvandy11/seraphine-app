@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { usePayment } from '../context/PaymentContext';
+import { usePayment } from '@/contexts/PaymentContext';
 import { useSeraphine } from '../hooks/useSeraphine';
 import SeraphineMessage from './SeraphineMessage';
 

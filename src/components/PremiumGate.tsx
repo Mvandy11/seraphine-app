@@ -1,5 +1,5 @@
 import React from 'react';
-import { usePayment } from '../context/PaymentContext';
+import { usePayment } from '@/contexts/PaymentContext';
 import { useSeraphine } from '../hooks/useSeraphine';
 
 type PlanTier = 'free' | 'basic' | 'premium' | 'mythic';

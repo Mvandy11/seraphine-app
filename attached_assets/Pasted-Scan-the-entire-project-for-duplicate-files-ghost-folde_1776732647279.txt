@@ -1,0 +1,48 @@
+Scan the entire project for duplicate files, ghost folders, and outdated copies of components, contexts, hooks, and utilities. The project currently contains duplicates in multiple locations, including but not limited to: `context`, `contexts`, `public/src`, and any leftover JS files from earlier migrations.
+
+Perform the following actions:
+
+1. Identify all duplicate files across the project. A file is considered a duplicate if:
+   - It has the same or similar name (e.g., TarotCard.tsx, tarotcard.tsx)
+   - It contains overlapping or outdated logic
+   - It exists in ghost folders such as `public/src` or `dist`
+   - It exists in both `context` and `contexts`
+   - It exists in both JS and TS versions
+
+2. Consolidate all real, active source files into the root-level `src/` directory. This includes:
+   - Components
+   - Contexts
+   - Hooks
+   - Lib files
+   - Utilities
+
+3. Delete all ghost or duplicate folders, including:
+   - `public/src`
+   - `context` (if `contexts` is the canonical folder)
+   - Any duplicate JS files when a TS version exists
+   - Any unused or outdated component copies
+
+4. Ensure only one canonical version exists for each of the following:
+   - TarotCard component
+   - AppContext
+   - OracleContext
+   - PaymentContext
+   - Any other context or provider
+   - Any hook (e.g., useSeraphine, useDailyCard)
+   - Any utility (e.g., tarotCards.ts)
+
+5. Update all imports across the entire project so that:
+   - All components import from `src/components`
+   - All contexts import from `src/contexts`
+   - All hooks import from `src/hooks`
+   - All lib files import from `src/lib`
+   - No file imports from deleted or ghost folders
+
+6. Ensure Vite-compatible image paths are used everywhere:
+   - No imports from `public/...`
+   - No relative paths to ghost folders
+   - All image paths begin with `/cards/...` or `/art/...`
+
+7. Do not modify unrelated logic. Only remove duplicates, consolidate real files, and fix imports.
+
+After completing the cleanup, save all modified files.

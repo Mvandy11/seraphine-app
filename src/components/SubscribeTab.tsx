@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
-import { usePayment } from "@/context/PaymentContext";
+import { usePayment } from "@/contexts/PaymentContext";
 import {
   createSetupIntent,
   startSubscription,
