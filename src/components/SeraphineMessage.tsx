@@ -4,7 +4,7 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import React from 'react';
-import type { DialogueLine } from '../lib/seraphineDialogue';
+import type { DialogueLine } from '@/lib/seraphineDialogue';
 
 interface SeraphineMessageProps {
   /** The dialogue line from speak() — renders nothing if null */

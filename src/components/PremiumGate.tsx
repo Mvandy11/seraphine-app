@@ -1,6 +1,6 @@
 import React from 'react';
 import { usePayment } from '@/contexts/PaymentContext';
-import { useSeraphine } from '../hooks/useSeraphine';
+import { useSeraphine } from '@/hooks/useSeraphine';
 
 type PlanTier = 'free' | 'basic' | 'premium' | 'mythic';
 

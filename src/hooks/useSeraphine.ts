@@ -4,7 +4,7 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import {
   resolveDisplayName,
   getDialogue,
@@ -13,7 +13,7 @@ import {
   type DialogueState,
   type DialogueLine,
   type ArtSlot,
-} from '../lib/seraphineDialogue';
+} from '@/lib/seraphineDialogue';
 
 interface UseSeraphineReturn {
   /** Resolved display name — "Michael", parsed first name, or "Traveler" */

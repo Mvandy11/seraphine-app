@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { usePayment } from '@/contexts/PaymentContext';
-import { useSeraphine } from '../hooks/useSeraphine';
+import { useSeraphine } from '@/hooks/useSeraphine';
 import SeraphineMessage from './SeraphineMessage';
 
 interface WelcomePremiumProps {

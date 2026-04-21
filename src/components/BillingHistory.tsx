@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePayment } from '@/contexts/PaymentContext';
-import { supabase } from '../lib/supabaseClient';
-import { useSeraphine } from '../hooks/useSeraphine';
+import { supabase } from '@/lib/supabaseClient';
+import { useSeraphine } from '@/hooks/useSeraphine';
 
 interface Invoice {
   id: string;

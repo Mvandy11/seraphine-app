@@ -17,54 +17,103 @@ A cinematic tarot reading web app featuring Seraphine Vale, a mystical oracle. U
 ```
 src/
 ├── App.tsx               # Root app with routing
-├── main.tsx              # Entry point
+├── main.tsx              # Entry point — AppProvider → PaymentProvider → OracleProvider
 ├── index.css             # Global styles (Tailwind + custom)
-├── components/           # UI components
-│   ├── ui/               # Shadcn/radix UI primitives
-│   ├── Header.tsx
+├── components/           # Custom app components only (no shadcn dupes)
+│   ├── ui/               # Shadcn/radix UI primitives (canonical, only location)
+│   ├── TarotCard.tsx     # Renders card image with reversed support
 │   ├── OracleConsole.tsx
+│   ├── ReadingViewport.tsx
 │   ├── SeraphinePortrait.tsx
-│   ├── TarotCard.tsx
-│   └── ...
-├── contexts/
-│   ├── AppContext.tsx     # User auth state
-│   ├── OracleContext.tsx  # Oracle phase/reading state
-│   └── PaymentContext.tsx # Subscription state
+│   └── ... (38 custom components total)
+├── contexts/             # Canonical — only context directory
+│   ├── AppContext.tsx     # Auth + modal state; exports useAppContext + useApp
+│   ├── OracleContext.tsx  # Oracle phase/reading/explanation state
+│   └── PaymentContext.tsx # Stripe subscription state; exports usePayment + usePaymentContext
 ├── pages/
+│   ├── Index.tsx
 │   ├── Oracle.tsx         # Main oracle experience
-│   ├── Subscribe.tsx      # Subscription page
-│   ├── ManageSubscription.tsx
+│   ├── Subscribe.tsx
+│   ├── PaymentSuccess.tsx
+│   ├── CardOfTheDay.tsx
+│   ├── SavedReadings.tsx
+│   ├── DeckMenu.tsx
 │   └── NotFound.tsx
 ├── lib/
 │   ├── supabaseClient.ts  # Supabase initialization
 │   ├── tarotCards.ts      # Full 78-card tarot deck data
-│   ├── utils.ts           # cn() utility
-│   └── ...
-└── hooks/
-    ├── use-toast.ts
-    └── useSeraphineVoice.ts
+│   ├── seraphineDialogue.ts  # DIALOGUE_MAP, ART_SLOTS, DialogueLine types
+│   ├── seraphineArt.ts    # Art slot helpers
+│   ├── artRegistry.ts     # Art asset registry
+│   ├── emotionToGradient.ts
+│   ├── oracleState.ts
+│   └── utils.ts           # cn() utility
+├── hooks/
+│   ├── useSeraphine.ts    # speak() → DialogueLine | null
+│   ├── useSeraphineVoice.ts  # ElevenLabs + browser fallback
+│   ├── useDailyCard.ts
+│   ├── use-mobile.tsx
+│   └── use-toast.ts
+├── utils/
+│   ├── drawCard.ts        # emits {…card, image, reversed: bool}
+│   ├── drawSpread.ts
+│   ├── savedReadings.ts
+│   ├── speak.ts
+│   ├── birthdayEngine.ts
+│   └── voiceWarmup.ts
+├── data/
+│   ├── deckIndex.ts
+│   ├── decks.ts
+│   └── emotions.ts
+├── services/
+│   └── subscriptionService.ts
+└── assets/
+    └── placeholder.svg   # Only dev placeholder (no images — those live in public/)
+
+public/
+├── art/
+│   ├── backgrounds/hero.jpg, oracle.jpg
+│   └── seraphine/portrait.png + emotion/{serene,fierce,sorrow,ascended}.png
+├── cards/
+│   └── major/00-fool.png … 21-world.png
+└── _redirects            # Netlify SPA routing
 ```
+
+## Import Conventions
+- **All imports** use `@/` alias (never relative `../` paths)
+- Shadcn UI components: `@/components/ui/<name>`
+- Custom components: `@/components/<Name>`
+- Contexts: `@/contexts/<Context>`
+- Hooks: `@/hooks/<hook>`
+- Lib: `@/lib/<module>`
+- Utils: `@/utils/<util>`
+
+## Image Path Conventions
+- Card images: `/cards/major/<id>.png` (e.g. `/cards/major/00-fool.png`)
+- Art assets: `/art/backgrounds/<name>.jpg`, `/art/seraphine/<name>.png`
+- No `import` of image files — always bare string paths served from `public/`
+
+## Key API Shapes
+- `useSeraphine().speak()` returns `DialogueLine | null` — always use `?.text`
+- `drawCard()` emits `{...card, image: string, reversed: boolean}` (30% reversed rate)
+- `PaymentProvider` accepts optional `user?` prop — `main.tsx` calls it with no props
 
 ## Environment Variables Required
 - `VITE_SUPABASE_URL` — Supabase project URL
 - `VITE_SUPABASE_ANON_KEY` — Supabase anonymous key
+- `VITE_STRIPE_PUBLISHABLE_KEY` — Stripe public key
 
 ## Development
 ```bash
 npm run dev    # Starts dev server on port 5000
-npm run build  # Production build to dist/
+npm run build  # Production build to dist/ (currently: 1.33s, 63 modules)
 ```
 
 ## Workflow
-- **Start application**: `npm run dev` on port 5000 (webview)
+- **Start application**: `npm run dev` on port 5000
 
 ## Deployment
-- Type: Static site
-- Build: `npm run build`
-- Serve: `dist/` directory
-
-## Notes
-- The project was imported from GitHub with all source files originally in a `src/` directory structure. The vite config uses `@` as alias to `./src`.
-- A placeholder is used for `seraphine.jpeg` (portrait image) — replace with actual artwork.
-- Supabase credentials must be configured for auth to work.
-- The root directory contains many unrelated library files from a node_modules dump that are part of the original repo commit history.
+- Target: Netlify (static site)
+- Build command: `npm run build`
+- Publish dir: `dist/`
+- SPA routing: `public/_redirects` (`/* /index.html 200`)

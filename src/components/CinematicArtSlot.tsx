@@ -5,7 +5,7 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import React from 'react';
-import type { ArtSlot } from '../lib/seraphineDialogue';
+import type { ArtSlot } from '@/lib/seraphineDialogue';
 
 interface CinematicArtSlotProps {
   /** Art slot definition from seraphineDialogue.ts */
