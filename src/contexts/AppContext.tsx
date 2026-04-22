@@ -1,11 +1,12 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import type { User } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabaseClient";
 
 interface AppContextValue {
-  user: any | null;
-  setUser: (u: any | null) => void;
+  user: User | null;
+  setUser: (u: User | null) => void;
   loading: boolean;
-  setLoading: (v: boolean) => void;
-  signOut: () => void;
+  signOut: () => Promise<void>;
   showAuthModal: boolean;
   setShowAuthModal: (v: boolean) => void;
   signIn: (email: string, password: string) => Promise<void>;
@@ -14,23 +15,40 @@ interface AppContextValue {
 
 const AppContext = createContext<AppContextValue | null>(null);
 
-export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<any | null>(null);
-  const [loading, setLoading] = useState(false);
+export function AppProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  const signOut = () => {
-    setUser(null);
-  };
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
-  const signIn = async (email: string, _password: string) => {
-    setUser({ email });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
     setShowAuthModal(false);
   };
 
-  const signUp = async (email: string, _password: string) => {
-    setUser({ email });
+  const signUp = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signUp({ email, password });
+    if (error) throw error;
     setShowAuthModal(false);
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
   };
 
   return (
@@ -39,7 +57,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         user,
         setUser,
         loading,
-        setLoading,
         signOut,
         showAuthModal,
         setShowAuthModal,

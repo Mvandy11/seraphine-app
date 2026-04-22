@@ -1,9 +1,8 @@
-// src/contexts/PaymentContext.tsx
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import {
   startSubscription,
   cancelSubscription,
+  getSubscription,
 } from "@/services/subscriptionService";
 
 type SubscriptionStatus = "none" | "active" | "canceling";
@@ -21,6 +20,7 @@ type PaymentContextValue = {
   isLoading: boolean;
   subscribe: (paymentMethodId: string) => Promise<void>;
   cancel: () => Promise<void>;
+  refresh: (userId: string) => Promise<void>;
 };
 
 const PaymentContext = createContext<PaymentContextValue | undefined>(undefined);
@@ -35,8 +35,29 @@ export const PaymentProvider: React.FC<Props> = ({ user = null, children }) => {
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const refresh = async (userId: string) => {
+    try {
+      const res = await getSubscription(userId);
+      if (res && res.status === "active") {
+        setStatus("active");
+        setSubscription({ plan: res.tier ?? "full", current_period_end: null });
+      } else {
+        setStatus("none");
+        setSubscription(null);
+      }
+    } catch {
+      setStatus("none");
+      setSubscription(null);
+    }
+  };
+
   useEffect(() => {
-    // fetchSubscriptionStatus(user?.id) goes here when ready
+    if (user?.id) {
+      refresh(user.id);
+    } else {
+      setStatus("none");
+      setSubscription(null);
+    }
   }, [user?.id]);
 
   const subscribe = async (paymentMethodId: string) => {
@@ -57,7 +78,7 @@ export const PaymentProvider: React.FC<Props> = ({ user = null, children }) => {
   };
 
   const cancel = async () => {
-    if (!user || !user.email) return;
+    if (!user) return;
     setIsLoading(true);
     try {
       const res = await cancelSubscription(user.id);
@@ -81,6 +102,7 @@ export const PaymentProvider: React.FC<Props> = ({ user = null, children }) => {
         isLoading,
         subscribe,
         cancel,
+        refresh,
       }}
     >
       {children}

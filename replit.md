@@ -79,6 +79,24 @@ public/
 └── _redirects            # Netlify SPA routing
 ```
 
+## Routing & Auth
+| Route | Access | Description |
+|---|---|---|
+| `/` | Public | Landing page (hero.jpg background) |
+| `/login` | Public | Supabase sign in / sign up |
+| `/subscribe` | Public | Stripe Elements checkout ($9.99/mo) |
+| `/payment-success` | Public | Post-checkout confirmation |
+| `/oracle` | Auth + Subscription | Main oracle experience (oracle.jpg bg) |
+| `/card-of-the-day` | Auth + Subscription | Daily card |
+| `/deck` | Auth + Subscription | Deck vault |
+| `/readings` | Auth + Subscription | Saved readings |
+| `/account` | Auth only | Email, status, manage/logout |
+| `/manage` | Auth only | Cancel/manage subscription |
+
+- `ProtectedRoute` (`src/components/ProtectedRoute.tsx`) gates auth + subscription
+- Unauthenticated → redirects to `/login`
+- Authenticated but no subscription → redirects to `/subscribe`
+
 ## Import Conventions
 - **All imports** use `@/` alias (never relative `../` paths)
 - Shadcn UI components: `@/components/ui/<name>`

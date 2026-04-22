@@ -17,10 +17,7 @@ export default function Oracle() {
     ? `/art/seraphine/emotion/${emotion}.png`
     : `/art/seraphine/portrait.png`;
 
-  const bg =
-    emotion === "sorrow"
-      ? "/art/backgrounds/oracle.jpg"
-      : "/art/backgrounds/hero.jpg";
+  const bg = "/art/backgrounds/oracle.jpg";
 
   const aura =
     emotion === "serene"

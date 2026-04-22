@@ -2,12 +2,19 @@ import { Routes, Route } from "react-router-dom";
 
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+import ProtectedRoute from "@/components/ProtectedRoute";
+
+import Index from "@/pages/Index";
 import Oracle from "@/pages/Oracle";
-import ManageSubscription from "@/components/ManageSubscription";
+import Login from "@/pages/Login";
+import Account from "@/pages/Account";
 import Subscribe from "@/pages/Subscribe";
+import ManageSubscription from "@/components/ManageSubscription";
 import CardOfTheDay from "@/pages/CardOfTheDay";
 import SavedReadings from "@/pages/SavedReadings";
 import DeckMenu from "@/pages/DeckMenu";
+import PaymentSuccess from "@/pages/PaymentSuccess";
+import NotFound from "@/pages/NotFound";
 
 export default function App() {
   return (
@@ -15,13 +22,51 @@ export default function App() {
       <Header />
 
       <Routes>
-        <Route path="/" element={<Oracle />} />
-        <Route path="/oracle" element={<Oracle />} />
-        <Route path="/manage" element={<ManageSubscription />} />
+        {/* Public */}
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/subscribe" element={<Subscribe />} />
-        <Route path="/card-of-the-day" element={<CardOfTheDay />} />
-        <Route path="/readings" element={<SavedReadings />} />
-        <Route path="/deck" element={<DeckMenu />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+
+        {/* Requires auth + subscription */}
+        <Route
+          path="/oracle"
+          element={
+            <ProtectedRoute>
+              <Oracle />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/card-of-the-day"
+          element={
+            <ProtectedRoute>
+              <CardOfTheDay />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/readings"
+          element={
+            <ProtectedRoute>
+              <SavedReadings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/deck"
+          element={
+            <ProtectedRoute>
+              <DeckMenu />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Requires auth only */}
+        <Route path="/account" element={<Account />} />
+        <Route path="/manage" element={<ManageSubscription />} />
+
+        <Route path="*" element={<NotFound />} />
       </Routes>
 
       <BottomNav />

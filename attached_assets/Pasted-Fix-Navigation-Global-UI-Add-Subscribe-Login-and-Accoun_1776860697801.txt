@@ -1,0 +1,115 @@
+Fix Navigation & Global UI
+
+Add “Subscribe”, “Login”, and “Account” to the main navigation bar.
+
+Ensure the navigation bar conditionally shows “Logout” when a user is authenticated.
+
+Fix the navigation icon issue:
+
+Remove hero.jpg from any global CSS or layout-level background assignment.
+
+Ensure hero.jpg is ONLY applied on the landing page.
+
+Ensure no global container, root div, or layout wrapper applies background-image: url('/art/backgrounds/hero.jpg').
+
+Restore page-specific backgrounds so only the Oracle page uses oracle.jpg.
+
+Fix Routing
+
+Add routes for:
+
+/subscribe
+
+/login
+
+/account
+
+/manage
+
+Ensure these pages are reachable from the navigation.
+
+Enable Authentication (Supabase)
+
+Mount the Supabase Auth Provider at the root of the app.
+
+Ensure session persistence is enabled.
+
+Ensure useUser() or equivalent hook returns the authenticated user object.
+
+Add login and signup UI using Supabase Auth.
+
+Redirect authenticated users to /account.
+
+Stripe Integration
+
+On user signup, create a Stripe customer and store the Stripe customer ID in the user’s metadata.
+
+Ensure the /subscribe page:
+
+Loads Stripe pricing tiers
+
+Allows the user to start a checkout session
+
+Redirects to Stripe Checkout
+
+Ensure the /manage page:
+
+Loads the Stripe billing portal
+
+Allows the user to manage their subscription
+
+Membership Gating
+
+Wrap all premium features (tarot reading, oracle reading, birthday reading, etc.) in a membership gate.
+
+If the user is not logged in, redirect to /login.
+
+If the user is logged in but has no active subscription, redirect to /subscribe.
+
+If the user has an active subscription, allow access.
+
+Account Page
+
+Add an /account page that displays:
+
+User email
+
+Subscription status
+
+“Manage Subscription” button (links to /manage)
+
+“Logout” button
+
+Fix Backgrounds
+
+Ensure hero.jpg is only used on the landing page.
+
+Ensure oracle.jpg is only used on the Oracle page.
+
+Remove any global CSS, layout wrapper, or root-level style that forces hero.jpg on every page.
+
+Verify no leftover .png.jpg files remain.
+
+Final Verification
+
+Verify all routes load without 404.
+
+Verify all backgrounds load correctly and only where intended.
+
+Verify tarot and oracle readings are gated behind authentication + subscription.
+
+Verify login, logout, signup, and session persistence work.
+
+Verify Stripe checkout and billing portal links work.
+
+Verify navigation updates based on auth state.
+
+Verify all Seraphine portraits load correctly.
+
+Verify tarot-back.png loads correctly.
+
+Verify oracle.jpg and hero.jpg are in the correct directory.
+
+Verify no unused or orphaned files remain in /public.
+
+Return a summary of all changes made.
