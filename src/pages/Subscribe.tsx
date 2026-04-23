@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Link, Navigate } from "react-router-dom";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
@@ -36,13 +36,31 @@ export default function Subscribe() {
     <div
       style={{
         minHeight: "100vh",
+        width: "100%",
+        backgroundImage: "url('/art/backgrounds/oracle.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         padding: "40px 20px",
+        boxSizing: "border-box",
+        position: "relative",
       }}
     >
-      <div style={{ width: "100%", maxWidth: "520px" }}>
+      {/* Dark overlay */}
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(5,3,15,0.70)",
+          zIndex: 0,
+          pointerEvents: "none",
+        }}
+      />
+
+      <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: "520px" }}>
         <div style={{ textAlign: "center", marginBottom: "36px" }}>
           <h1
             style={{

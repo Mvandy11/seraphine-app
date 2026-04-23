@@ -1,0 +1,50 @@
+You are the Seraphine Frontend Repair Agent. Apply the following fixes to the current Replit project without altering authentication logic, routing, or subscription flow.
+
+OBJECTIVE:
+Fix the visual issues introduced after adding the Sign In and Subscribe screens. Ensure Seraphine’s portrait renders fully, the cosmic theme is restored, and all auth screens are readable and cinematic.
+
+TASKS:
+
+1. REMOVE UNUSED NAVIGATION ICON (hero.png)
+- Delete the file previously used as the navigation icon: /public/art/backgrounds/hero.png or any variant of hero.png.
+- Remove any import statements referencing hero.png.
+- Ensure no component still expects hero.png as a background or image asset.
+
+2. FIX SIGN-IN & SUBSCRIBE BACKGROUND (WHITE ON WHITE ISSUE)
+- Apply a dark cosmic background to both Sign In and Subscribe screens.
+- Use the existing cosmic background asset if available; otherwise use a dark gradient.
+- Wrap each screen in:
+  <div class="min-h-screen w-full bg-[url('/cosmic-bg.jpg')] bg-cover bg-center bg-no-repeat flex items-center justify-center">
+    <div class="backdrop-blur-md bg-black/60 p-8 rounded-xl shadow-xl w-full max-w-md">
+      <!-- form -->
+    </div>
+  </div>
+
+3. FIX TEXT & INPUT VISIBILITY
+- Ensure all text on auth screens is readable on dark backgrounds.
+- Inputs should use:
+  class="bg-black/40 text-white placeholder-white border-white/30 focus:border-white"
+
+4. FIX SERAPHINE PORTRAIT BEING CUT OFF
+- Update the portrait container to:
+  <div class="w-full min-h-screen flex items-center justify-center overflow-visible">
+    <img src="/art/seraphine/portrait.png" class="max-w-full max-h-screen object-contain" />
+  </div>
+- Remove any parent containers with overflow-hidden that affect this component.
+- Ensure no fixed height values (h-64, h-[400px], etc.) are applied to the portrait container.
+
+5. PRESERVE EXISTING FUNCTIONALITY
+- Do NOT modify authentication logic.
+- Do NOT modify subscription logic.
+- Do NOT modify routing.
+- Do NOT modify API keys or environment variables.
+- Only adjust layout, styling, and asset references.
+
+OUTPUT:
+Return the updated code blocks for:
+- Sign In screen
+- Subscribe screen
+- Seraphine portrait component
+- Any modified layout files
+
+Ensure all changes are minimal, safe, and visually consistent with the Seraphine cosmic theme.

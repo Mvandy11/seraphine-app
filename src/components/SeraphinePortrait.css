@@ -1,23 +1,26 @@
 .seraphine-portrait-wrapper {
   width: 100%;
-  height: 50vh;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .seraphine-portrait-container {
   width: 100%;
-  height: 100%;
+  max-width: 560px;
   position: relative;
   animation: fadeIn 1.2s ease-out forwards, float 6s ease-in-out infinite;
 }
 
 .seraphine-portrait {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-height: 80vh;
+  object-fit: contain;
   filter: brightness(1.05) contrast(1.05);
   animation: shimmer 16s infinite ease-in-out;
+  display: block;
 }
 
 .seraphine-aura {
@@ -31,27 +34,28 @@
   filter: blur(60px);
   animation: auraPulse 8s ease-in-out infinite;
   pointer-events: none;
+  z-index: -1;
 }
 
 /* Animations */
 
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(1.05); }
-  to { opacity: 1; transform: scale(1); }
+  to   { opacity: 1; transform: scale(1);    }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
+  0%, 100% { transform: translateY(0px);  }
+  50%       { transform: translateY(-6px); }
 }
 
 @keyframes auraPulse {
   0%, 100% { opacity: 0.35; }
-  50% { opacity: 0.55; }
+  50%       { opacity: 0.55; }
 }
 
 @keyframes shimmer {
-  0%, 90% { filter: brightness(1.05); }
-  95% { filter: brightness(1.25); }
-  100% { filter: brightness(1.05); }
+  0%, 90%  { filter: brightness(1.05); }
+  95%      { filter: brightness(1.25); }
+  100%     { filter: brightness(1.05); }
 }
