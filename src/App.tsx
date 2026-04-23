@@ -14,6 +14,7 @@ import CardOfTheDay from "@/pages/CardOfTheDay";
 import SavedReadings from "@/pages/SavedReadings";
 import DeckMenu from "@/pages/DeckMenu";
 import PaymentSuccess from "@/pages/PaymentSuccess";
+import VaultPreview from "@/pages/VaultPreview";
 import NotFound from "@/pages/NotFound";
 
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/subscribe" element={<Subscribe />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/vault-preview"   element={<VaultPreview />} />
 
         {/* Requires auth + subscription */}
         <Route

@@ -30,6 +30,30 @@ uri = "file://public/cards/minor/swords/ace.png"
 type = "image"
 title = "ace of swords minor arcana"
 
+[[generated]]
+id = "uqggcEp5i0Inoov7_1B54"
+uri = "file://public/cards/seraphine/deck/serene-ascension.png"
+type = "image"
+title = "serene ascension seraphine card"
+
+[[generated]]
+id = "0ktyfJDEAW-ugZMrVsigx"
+uri = "file://public/cards/seraphine/deck/fierce-breakthrough.png"
+type = "image"
+title = "fierce breakthrough seraphine card"
+
+[[generated]]
+id = "uzfOoc4vB-EjutRl_EyTI"
+uri = "file://public/cards/seraphine/deck/sorrows-release.png"
+type = "image"
+title = "sorrows release seraphine card"
+
+[[generated]]
+id = "Ut_5I3u4T28XddXdyhU1g"
+uri = "file://public/cards/seraphine/deck/back.png"
+type = "image"
+title = "seraphine deck card back"
+
 [[outputs]]
 id = "GP7ix70fAIA58aeF0KgSn"
 uri = "file://public/cards/minor/cups/ace.png"
@@ -59,3 +83,27 @@ id = "ccALMo5Ylfgk8aklnaBxV"
 uri = "file://public/cards/minor/back/minor-back.png"
 type = "image"
 title = "Minor Arcana Back"
+
+[[outputs]]
+id = "i-4C9fpmGRBhOJBOKGIoV"
+uri = "file://public/cards/seraphine/deck/serene-ascension.png"
+type = "image"
+title = "Serene Ascension"
+
+[[outputs]]
+id = "2uX_JSqmnvwZc9yEN4Jhj"
+uri = "file://public/cards/seraphine/deck/fierce-breakthrough.png"
+type = "image"
+title = "Fierce Breakthrough"
+
+[[outputs]]
+id = "pilLXoQZjqo92bYtZMfTx"
+uri = "file://public/cards/seraphine/deck/sorrows-release.png"
+type = "image"
+title = "Sorrow's Release"
+
+[[outputs]]
+id = "btFGL-qTYOdG_Eq04erDQ"
+uri = "file://public/cards/seraphine/deck/back.png"
+type = "image"
+title = "Seraphine Deck Back"
