@@ -1,0 +1,61 @@
+uploads = []
+
+[[generated]]
+id = "gr5NgiurweZJeuIAnJ-tZ"
+uri = "file://public/cards/minor/cups/ace.png"
+type = "image"
+title = "ace of cups minor arcana"
+
+[[generated]]
+id = "zdf4vW6iPrg4mCCtMvBdY"
+uri = "file://public/cards/minor/pentacles/ace.png"
+type = "image"
+title = "ace of pentacles minor arcana"
+
+[[generated]]
+id = "oNg1xiy3VdhH_u_Tx2UDV"
+uri = "file://public/cards/minor/back/minor-back.png"
+type = "image"
+title = "minor arcana card back"
+
+[[generated]]
+id = "MgV1fXHcIZXjQfqLxam8C"
+uri = "file://public/cards/minor/wands/ace.png"
+type = "image"
+title = "ace of wands minor arcana"
+
+[[generated]]
+id = "tk79t3IVeZJ8M4zOvABIL"
+uri = "file://public/cards/minor/swords/ace.png"
+type = "image"
+title = "ace of swords minor arcana"
+
+[[outputs]]
+id = "GP7ix70fAIA58aeF0KgSn"
+uri = "file://public/cards/minor/cups/ace.png"
+type = "image"
+title = "Ace of Cups"
+
+[[outputs]]
+id = "AWkwzrR647P2RCdqwQH-V"
+uri = "file://public/cards/minor/pentacles/ace.png"
+type = "image"
+title = "Ace of Pentacles"
+
+[[outputs]]
+id = "bGlsgEocVUUaMikIQrZ17"
+uri = "file://public/cards/minor/swords/ace.png"
+type = "image"
+title = "Ace of Swords"
+
+[[outputs]]
+id = "wVNC3WCYbtstpNXHsPT4f"
+uri = "file://public/cards/minor/wands/ace.png"
+type = "image"
+title = "Ace of Wands"
+
+[[outputs]]
+id = "ccALMo5Ylfgk8aklnaBxV"
+uri = "file://public/cards/minor/back/minor-back.png"
+type = "image"
+title = "Minor Arcana Back"
