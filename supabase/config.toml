@@ -1,6 +1,0 @@
-# Supabase project configuration
-# Project ref: bxxvgumwlfhfzhmqvxsh
-# Docs: https://supabase.com/docs/reference/cli/config
-
-[api]
-project_id = "bxxvgumwlfhfzhmqvxsh"
