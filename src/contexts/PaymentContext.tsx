@@ -5,6 +5,12 @@ import {
   getSubscription,
 } from "@/services/subscriptionService";
 
+// ─── Dev bypass ──────────────────────────────────────────────────────────────
+// Vite sets import.meta.env.DEV = true during `npm run dev` and false in
+// production builds, so this is automatically disabled when you deploy.
+const DEV_MODE = import.meta.env.DEV;
+// ─────────────────────────────────────────────────────────────────────────────
+
 type SubscriptionStatus = "none" | "active" | "canceling";
 
 export interface SubscriptionInfo {
@@ -90,14 +96,18 @@ export const PaymentProvider: React.FC<Props> = ({ user = null, children }) => {
     }
   };
 
-  const isSubscribed = status === "active";
+  const isSubscribed = DEV_MODE ? true : status === "active";
+  const resolvedStatus: SubscriptionStatus = DEV_MODE ? "active" : status;
+  const resolvedSubscription: SubscriptionInfo | null = DEV_MODE
+    ? { plan: "full", current_period_end: null }
+    : subscription;
 
   return (
     <PaymentContext.Provider
       value={{
-        status,
+        status: resolvedStatus,
         isSubscribed,
-        subscription,
+        subscription: resolvedSubscription,
         loading: isLoading,
         isLoading,
         subscribe,

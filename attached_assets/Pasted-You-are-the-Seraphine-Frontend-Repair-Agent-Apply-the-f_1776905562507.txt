@@ -1,0 +1,71 @@
+You are the Seraphine Frontend Repair Agent. Apply the following fixes to the current Replit project without altering authentication logic, routing, or subscription flow unless explicitly stated.
+
+OBJECTIVE:
+Fix the visual issues introduced after adding the Sign In, Subscribe, and Account screens. Ensure Seraphine’s portrait renders fully, the cosmic theme is restored across all auth and account screens, and enable a temporary developer bypass for subscription checks.
+
+TASKS:
+
+1. REMOVE UNUSED NAVIGATION ICON (hero.png)
+- Delete the file previously used as the navigation icon: hero.png (typically in /public/art/backgrounds/ or /src/assets/).
+- Remove any import statements referencing hero.png.
+- Ensure no component still expects hero.png as a background or image asset.
+
+2. FIX SIGN-IN & SUBSCRIBE BACKGROUND (WHITE ON WHITE ISSUE)
+- Apply a dark cosmic background to both Sign In and Subscribe screens.
+- Use the existing cosmic background asset if available; otherwise use a dark gradient.
+- Wrap each screen in:
+  <div class="min-h-screen w-full bg-[url('/cosmic-bg.jpg')] bg-cover bg-center bg-no-repeat flex items-center justify-center">
+    <div class="backdrop-blur-md bg-black/60 p-8 rounded-xl shadow-xl w-full max-w-md">
+      <!-- form -->
+    </div>
+  </div>
+
+3. FIX ACCOUNT SCREEN BACKGROUND
+- Apply the same dark cosmic background and black/60 overlay to the Account screen.
+- Ensure all text and UI elements remain readable.
+- Remove any default white backgrounds inherited from shadcn or layout wrappers.
+
+4. FIX TEXT & INPUT VISIBILITY
+- Ensure all text on auth and account screens is readable on dark backgrounds.
+- Inputs should use:
+  class="bg-black/40 text-white placeholder-white border-white/30 focus:border-white"
+
+5. FIX SERAPHINE PORTRAIT BEING CUT OFF
+- Update the portrait container to:
+  <div class="w-full min-h-screen flex items-center justify-center overflow-visible">
+    <img src="/art/seraphine/portrait.png" class="max-w-full max-h-screen object-contain" />
+  </div>
+- Remove any parent containers with overflow-hidden that affect this component.
+- Ensure no fixed height values (h-64, h-[400px], etc.) are applied to the portrait container.
+
+6. ADD DEV MODE SUBSCRIPTION BYPASS (SAFE FOR DEVELOPMENT)
+- In the subscription check logic (e.g., useSubscriptionStatus, ProtectedRoute, or subscription guard), add:
+  
+  const DEV_MODE = true; // set to false in production
+
+  if (DEV_MODE) {
+    return {
+      hasActiveSubscription: true,
+      tier: "full",
+      trialing: false,
+    };
+  }
+
+- This bypass must ONLY activate in development and must not break Stripe or Supabase logic.
+
+7. PRESERVE EXISTING FUNCTIONALITY
+- Do NOT modify authentication logic.
+- Do NOT modify subscription logic beyond the DEV_MODE bypass.
+- Do NOT modify routing.
+- Do NOT modify API keys or environment variables.
+- Only adjust layout, styling, and asset references.
+
+OUTPUT:
+Return the updated code blocks for:
+- Sign In screen
+- Subscribe screen
+- Account screen
+- Seraphine portrait component
+- Any modified layout or guard files
+
+Ensure all changes are minimal, safe, and visually consistent with the Seraphine cosmic theme.

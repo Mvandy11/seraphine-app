@@ -32,14 +32,34 @@ export default function Account() {
     <div
       style={{
         minHeight: "100vh",
+        width: "100%",
+        backgroundImage: "url('/art/backgrounds/oracle.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         padding: "20px",
+        boxSizing: "border-box",
+        position: "relative",
       }}
     >
+      {/* Dark overlay */}
       <div
         style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(5,3,15,0.72)",
+          zIndex: 0,
+          pointerEvents: "none",
+        }}
+      />
+
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
           width: "100%",
           maxWidth: "480px",
           display: "flex",
@@ -54,6 +74,7 @@ export default function Account() {
             color: "white",
             textAlign: "center",
             marginBottom: "8px",
+            textShadow: "0 0 20px rgba(124,58,237,0.5)",
           }}
         >
           Your Account
@@ -101,10 +122,11 @@ export default function Account() {
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(124,58,237,0.2)",
+  background: "rgba(0,0,0,0.5)",
+  border: "1px solid rgba(124,58,237,0.25)",
   borderRadius: "14px",
   padding: "20px 24px",
+  backdropFilter: "blur(12px)",
 };
 
 const labelStyle: React.CSSProperties = {
@@ -130,18 +152,19 @@ const primaryLinkStyle: React.CSSProperties = {
   color: "white",
   fontWeight: 600,
   textDecoration: "none",
-  boxShadow: "0 0 20px rgba(124,58,237,0.3)",
+  boxShadow: "0 0 24px rgba(124,58,237,0.4)",
 };
 
 const secondaryLinkStyle: React.CSSProperties = {
   display: "block",
   textAlign: "center",
   padding: "12px",
-  background: "rgba(255,255,255,0.06)",
-  border: "1px solid rgba(124,58,237,0.2)",
+  background: "rgba(0,0,0,0.4)",
+  border: "1px solid rgba(124,58,237,0.25)",
   borderRadius: "10px",
   color: "white",
   textDecoration: "none",
+  backdropFilter: "blur(8px)",
 };
 
 const dangerButtonStyle: React.CSSProperties = {
