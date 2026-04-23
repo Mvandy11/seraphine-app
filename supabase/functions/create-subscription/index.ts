@@ -12,11 +12,31 @@ const FULL_PRICE_ID = Deno.env.get("FULL_PRICE_ID")!;
 const CONNECT_ID = Deno.env.get("STRIPE_CONNECT_ACCOUNT_ID")!;
 
 serve(async (req) => {
+  // ------------------------------------------------------------
+  // CORS — MUST BE FIRST
+  // ------------------------------------------------------------
+  if (req.method === "OPTIONS") {
+    return new Response("ok", {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS"
+      }
+    });
+  }
+
   try {
     const { userId, email, paymentMethodId, action } = await req.json();
 
     if (!userId || !email) {
-      return new Response("Missing userId or email", { status: 400 });
+      return new Response("Missing userId or email", {
+        status: 400,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS"
+        }
+      });
     }
 
     // ------------------------------------------------------------
@@ -45,23 +65,32 @@ serve(async (req) => {
       if (subs.data.length === 0) {
         return new Response(JSON.stringify({ status: "no_active_subscription" }), {
           status: 200,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS"
+          }
         });
       }
 
       const sub = subs.data[0];
 
-      // Cancel at period end (no refund)
       const canceled = await stripe.subscriptions.update(sub.id, {
         cancel_at_period_end: true,
       });
 
       return new Response(JSON.stringify({ status: "canceled", subscription: canceled }), {
         status: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS"
+        }
       });
     }
 
     // ------------------------------------------------------------
-    // 3. Create SetupIntent (attach payment method)
+    // 3. Create SetupIntent
     // ------------------------------------------------------------
     if (action === "create_setup_intent") {
       const setupIntent = await stripe.setupIntents.create({
@@ -71,44 +100,5 @@ serve(async (req) => {
 
       return new Response(JSON.stringify({ clientSecret: setupIntent.client_secret }), {
         status: 200,
-      });
-    }
-
-    // ------------------------------------------------------------
-    // 4. Start subscription
-    // ------------------------------------------------------------
-    if (action === "start_subscription") {
-      if (!paymentMethodId) {
-        return new Response("Missing paymentMethodId", { status: 400 });
-      }
-
-      // Attach payment method
-      await stripe.paymentMethods.attach(paymentMethodId, {
-        customer: customer.id,
-      });
-
-      await stripe.customers.update(customer.id, {
-        invoice_settings: { default_payment_method: paymentMethodId },
-      });
-
-      // Create subscription
-      const subscription = await stripe.subscriptions.create({
-        customer: customer.id,
-        items: [{ price: FULL_PRICE_ID }],
-        expand: ["latest_invoice.payment_intent"],
-        transfer_data: {
-          destination: CONNECT_ID,
-        },
-      });
-
-      return new Response(JSON.stringify({ status: "active", subscription }), {
-        status: 200,
-      });
-    }
-
-    return new Response("Invalid action", { status: 400 });
-  } catch (err) {
-    console.error("Subscription error:", err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
-  }
-});
+        headers: {
+          "Access-Control-Allow-Origin": "*
