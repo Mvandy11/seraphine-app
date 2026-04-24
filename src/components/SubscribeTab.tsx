@@ -59,7 +59,7 @@ const SubscribeTab: React.FC<Props> = ({ user }) => {
       const paymentMethodId = result.setupIntent.payment_method as string;
 
       // 3. Start subscription via Edge Function
-      await startSubscription(user.id, paymentMethodId);
+      await startSubscription(user.id, user.email, paymentMethodId);
 
       // 4. Refresh UI
       await refreshSubscription();
@@ -89,6 +89,13 @@ const SubscribeTab: React.FC<Props> = ({ user }) => {
       <h2>Full Access Membership</h2>
       <p>Unlocks all features. Cancel anytime.</p>
 
+      {/* Trial active */}
+      {status === "trial" && (
+        <p style={{ color: "#a78bfa" }}>
+          ✦ Your 7-day trial is active. Enjoy full access to Seraphine.
+        </p>
+      )}
+
       {/* Not subscribed */}
       {status === "none" && (
         <>
@@ -101,7 +108,7 @@ const SubscribeTab: React.FC<Props> = ({ user }) => {
         </>
       )}
 
-      {/* Active */}
+      {/* Active paid */}
       {status === "active" && !cancelAtPeriodEnd && (
         <>
           <p>Your membership is active.</p>

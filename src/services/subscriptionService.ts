@@ -3,16 +3,17 @@
 const EDGE_FUNCTION_URL =
   "https://bxxvgumwlfhfzhmqvxsh.supabase.co/functions/v1/create-subscription";
 
-// -----------------------------
-// Types
-// -----------------------------
+// ─── Types ────────────────────────────────────────────────────
+
 type CreateSetupIntentResponse = {
   clientSecret: string;
 };
 
 type StartSubscriptionResponse = {
   status: string;
-  subscription: any;
+  subscriptionId?: string;
+  clientSecret?: string | null;
+  subscription?: any;
 };
 
 type CancelSubscriptionResponse = {
@@ -20,87 +21,68 @@ type CancelSubscriptionResponse = {
   subscription?: any;
 };
 
-type GetSubscriptionResponse = {
-  status: string;
-  tier: string | null;
-  cancel_at_period_end: boolean;
-  trial_ends_at: string | null;
+type CheckStatusResponse = {
+  isSubscribed: boolean;
+  subscription: any | null;
 };
 
-// -----------------------------
-// Create SetupIntent
-// -----------------------------
+// ─── Create SetupIntent ───────────────────────────────────────
+
 export async function createSetupIntent(userId: string, email: string) {
   const res = await fetch(EDGE_FUNCTION_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      userId,
-      email,
-      action: "create_setup_intent",
-    }),
+    body: JSON.stringify({ userId, email, action: "create_setup_intent" }),
   });
-
   if (!res.ok) throw new Error("Failed to create SetupIntent");
   const data = (await res.json()) as CreateSetupIntentResponse;
   return data.clientSecret;
 }
 
-// -----------------------------
-// Start Subscription
-// -----------------------------
+// ─── Start Subscription ───────────────────────────────────────
+
 export async function startSubscription(
   userId: string,
+  email: string,
   paymentMethodId: string
 ) {
   const res = await fetch(EDGE_FUNCTION_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      userId,
-      paymentMethodId,
-      action: "start_subscription",
-    }),
+    body: JSON.stringify({ userId, email, paymentMethodId, action: "start_subscription" }),
   });
-
   if (!res.ok) throw new Error("Failed to start subscription");
-  const data = (await res.json()) as StartSubscriptionResponse;
-  return data;
+  return (await res.json()) as StartSubscriptionResponse;
 }
 
-// -----------------------------
-// Cancel Subscription
-// -----------------------------
-export async function cancelSubscription(userId: string) {
+// ─── Cancel Subscription ──────────────────────────────────────
+
+export async function cancelSubscription(userId: string, email: string) {
   const res = await fetch(EDGE_FUNCTION_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      userId,
-      action: "cancel",
-    }),
+    body: JSON.stringify({ userId, email, action: "cancel" }),
   });
-
   if (!res.ok) throw new Error("Failed to cancel subscription");
-  const data = (await res.json()) as CancelSubscriptionResponse;
-  return data;
+  return (await res.json()) as CancelSubscriptionResponse;
 }
 
-// -----------------------------
-// Get Subscription Status
-// -----------------------------
-export async function getSubscription(userId: string) {
-  const res = await fetch(EDGE_FUNCTION_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      userId,
-      action: "check_status",
-    }),
-  });
+// ─── Check Stripe Subscription Status ────────────────────────
 
-  if (!res.ok) return null;
-
-  const data = (await res.json()) as GetSubscriptionResponse;
-  return data;
+export async function checkStripeSubscription(
+  userId: string,
+  email: string
+): Promise<boolean> {
+  try {
+    const res = await fetch(EDGE_FUNCTION_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, email, action: "check_status" }),
+    });
+    if (!res.ok) return false;
+    const data = (await res.json()) as CheckStatusResponse;
+    return data.isSubscribed === true;
+  } catch {
+    return false;
+  }
 }
