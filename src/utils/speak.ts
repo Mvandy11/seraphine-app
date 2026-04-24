@@ -72,10 +72,10 @@ function resolveMode(raw: string | undefined): SpeakMode {
 // 2c. Numeric style mapping for ElevenLabs
 // ─────────────────────────────────────────────
 const MODE_STYLE_MAP: Record<SpeakMode, number> = {
-  standard: 0,
-  truth:    60,
-  gentle:   25,
-  shadow:   10,
+  standard: 0.0,
+  truth:    0.60,
+  gentle:   0.25,
+  shadow:   0.10,
 };
 
 // ─────────────────────────────────────────────
