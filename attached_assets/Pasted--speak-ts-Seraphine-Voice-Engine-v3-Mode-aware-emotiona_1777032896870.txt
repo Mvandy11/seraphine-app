@@ -15,7 +15,11 @@ function stripFormatting(text: string) {
     .replace(/`(.*?)`/g, "$1")              // inline code
     .replace(/#+\s?(.*)/g, "$1")            // headings
     .replace(/>\s?(.*)/g, "$1")             // blockquotes
-    .replace(/\[(.*?)\]\((.*?)\)/g, "$1")   // links
+    .replace(/
+
+\[(.*?)\]
+
+\((.*?)\)/g, "$1")   // links
     .replace(/\*/g, "")                     // leftover asterisks
     .trim();
 }
@@ -73,9 +77,9 @@ function resolveMode(raw: string | undefined): SpeakMode {
 // ─────────────────────────────────────────────
 const MODE_STYLE_MAP: Record<SpeakMode, number> = {
   standard: 0,
-  truth:    60,
-  gentle:   25,
-  shadow:   10,
+  truth: 60,
+  gentle: 25,
+  shadow: 10,
 };
 
 // ─────────────────────────────────────────────
@@ -114,7 +118,7 @@ async function speakWithElevenLabs(text: string, mode?: SpeakMode) {
           voice_settings: {
             stability: 0.15,
             similarity_boost: 0.55,
-            style: MODE_STYLE_MAP[mode ?? "standard"],
+            style: MODE_STYLE_MAP[mode ?? "standard"], // ⭐ FIXED: numeric style
             use_speaker_boost: false,
           },
         }),
@@ -142,53 +146,4 @@ async function speakWithElevenLabs(text: string, mode?: SpeakMode) {
 }
 
 // ─────────────────────────────────────────────
-// 5. Browser fallback (forced feminine voice)
-// ─────────────────────────────────────────────
-function fallbackBrowserVoice(text: string, mode?: SpeakMode) {
-  if (!window.speechSynthesis) return;
-
-  const utter = new SpeechSynthesisUtterance(text);
-
-  const voices = speechSynthesis.getVoices();
-  const preferred = voices.find(v =>
-    /female|woman|zira|eva|susan|sara|english|uk|us/i.test(v.name)
-  );
-  utter.voice = preferred || voices[0];
-
-  switch (mode) {
-    case "truth":
-      utter.pitch = 1.1;
-      utter.rate  = 1.05;
-      break;
-    case "gentle":
-      utter.pitch = 1.3;
-      utter.rate  = 0.9;
-      break;
-    case "shadow":
-      utter.pitch = 0.85;
-      utter.rate  = 0.85;
-      break;
-    default:
-      utter.pitch = 1.0;
-      utter.rate  = 1.0;
-  }
-
-  speechSynthesis.cancel();
-  speechSynthesis.speak(utter);
-}
-
-// ─────────────────────────────────────────────
-// 6. Main speak() function
-// Accepts both oracle emotional physics types (serene/fierce/sorrow/ascended)
-// and speak modes (standard/truth/gentle/shadow) — maps either correctly.
-// ─────────────────────────────────────────────
-export async function speak(
-  rawText: string,
-  mode?: string
-) {
-  const resolved = resolveMode(mode);
-  const prepared = prepareSeraphineSpeech(rawText, resolved);
-
-  const success = await speakWithElevenLabs(prepared, resolved);
-  if (!success) fallbackBrowserVoice(prepared, resolved);
-}
+// 5. Browser fallback (forced feminine
