@@ -5,6 +5,12 @@ import path from "path";
 export default defineConfig({
   base: "/", // ⭐ REQUIRED FOR NETLIFY
   plugins: [react()],
+  define: {
+    // Explicitly pull from process.env (Replit Secrets) so they always win
+    // over any placeholder value in the .env file.
+    "import.meta.env.VITE_ELEVENLABS_API_KEY": JSON.stringify(process.env.VITE_ELEVENLABS_API_KEY ?? ""),
+    "import.meta.env.VITE_ELEVENLABS_VOICE_ID": JSON.stringify(process.env.VITE_ELEVENLABS_VOICE_ID ?? ""),
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

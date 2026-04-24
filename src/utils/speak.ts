@@ -86,7 +86,10 @@ export function prepareSeraphineSpeech(
 // 4. ElevenLabs TTS
 // ─────────────────────────────────────────────
 async function speakWithElevenLabs(text: string, mode?: string) {
-  if (!ELEVEN_API_KEY || !SERAPHINE_VOICE_ID) return false;
+  if (!ELEVEN_API_KEY || !SERAPHINE_VOICE_ID) {
+    console.warn("[Seraphine] ElevenLabs skipped — API key or voice ID not set. Falling back to browser voice.");
+    return false;
+  }
 
   try {
     const response = await fetch(
@@ -110,17 +113,22 @@ async function speakWithElevenLabs(text: string, mode?: string) {
       }
     );
 
-    if (!response.ok) throw new Error("ElevenLabs request failed");
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      console.error(`[Seraphine] ElevenLabs HTTP ${response.status}: ${body}`);
+      return false;
+    }
 
     const audioBlob = await response.blob();
     const audioUrl = URL.createObjectURL(audioBlob);
 
     const audio = new Audio(audioUrl);
     audio.play();
+    console.log("[Seraphine] ElevenLabs TTS playing.");
 
     return true;
   } catch (err) {
-    console.error("ElevenLabs error:", err);
+    console.error("[Seraphine] ElevenLabs fetch error:", err);
     return false;
   }
 }
