@@ -15,7 +15,11 @@ function stripFormatting(text: string) {
     .replace(/`(.*?)`/g, "$1")              // inline code
     .replace(/#+\s?(.*)/g, "$1")            // headings
     .replace(/>\s?(.*)/g, "$1")             // blockquotes
-    .replace(/\[(.*?)\]\((.*?)\)/g, "$1")   // links
+    .replace(/
+
+\[(.*?)\]
+
+\((.*?)\)/g, "$1")   // links
     .replace(/\*/g, "")                     // leftover asterisks
     .trim();
 }
@@ -48,26 +52,6 @@ function applyModeVoicePhysics(
     default:
       return text.trim();
   }
-}
-
-// ─────────────────────────────────────────────
-// 2b. Map oracle emotional physics → speak mode
-// ─────────────────────────────────────────────
-type OracleEmotion = "serene" | "fierce" | "sorrow" | "ascended";
-type SpeakMode = "standard" | "truth" | "gentle" | "shadow";
-
-const EMOTION_TO_MODE: Record<OracleEmotion, SpeakMode> = {
-  serene:   "gentle",
-  fierce:   "truth",
-  sorrow:   "shadow",
-  ascended: "standard",
-};
-
-function resolveMode(raw: string | undefined): SpeakMode {
-  if (!raw) return "standard";
-  if (raw in EMOTION_TO_MODE) return EMOTION_TO_MODE[raw as OracleEmotion];
-  const known: SpeakMode[] = ["standard", "truth", "gentle", "shadow"];
-  return known.includes(raw as SpeakMode) ? (raw as SpeakMode) : "standard";
 }
 
 // ─────────────────────────────────────────────
@@ -163,16 +147,13 @@ function fallbackBrowserVoice(text: string, mode?: string) {
 
 // ─────────────────────────────────────────────
 // 6. Main speak() function
-// Accepts both oracle emotional physics types (serene/fierce/sorrow/ascended)
-// and speak modes (standard/truth/gentle/shadow) — maps either correctly.
 // ─────────────────────────────────────────────
 export async function speak(
   rawText: string,
-  mode?: string
+  mode: "standard" | "truth" | "gentle" | "shadow" = "standard"
 ) {
-  const resolved = resolveMode(mode);
-  const prepared = prepareSeraphineSpeech(rawText, resolved);
+  const prepared = prepareSeraphineSpeech(rawText, mode);
 
-  const success = await speakWithElevenLabs(prepared, resolved);
-  if (!success) fallbackBrowserVoice(prepared, resolved);
+  const success = await speakWithElevenLabs(prepared, mode);
+  if (!success) fallbackBrowserVoice(prepared, mode);
 }
