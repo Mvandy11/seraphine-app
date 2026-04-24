@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useAppContext } from "@/contexts/AppContext";
 import {
   startSubscription,
   cancelSubscription,
@@ -7,7 +8,7 @@ import {
 } from "@/services/subscriptionService";
 
 // ─── Dev bypass ───────────────────────────────────────────────
-// Vite sets import.meta.env.DEV = true in `npm run dev` and false in builds.
+// Vite sets import.meta.env.DEV = true in `npm run dev`, false in builds.
 const DEV_MODE = import.meta.env.DEV;
 
 // ─── Types ────────────────────────────────────────────────────
@@ -28,48 +29,47 @@ type PaymentContextValue = {
   isLoading: boolean;
   subscribe: (paymentMethodId: string) => Promise<void>;
   cancel: () => Promise<void>;
-  refresh: (userId: string, email: string) => Promise<void>;
+  refresh: () => Promise<void>;
 };
 
 const PaymentContext = createContext<PaymentContextValue | undefined>(undefined);
 
-type Props = {
-  user?: { id: string; email: string | null } | null;
-  children: React.ReactNode;
-};
-
 // ─── Trial check — queries profiles.trial_end directly ────────
-// If the row doesn't exist yet (user signed up before the trigger),
-// we upsert it now with a fresh 7-day trial.
+// If the row doesn't exist yet (signed up before trigger was created),
+// we upsert one now with a fresh 7-day trial.
 
 async function checkTrialActive(
   userId: string
 ): Promise<{ active: boolean; trialEnds: string | null }> {
   try {
-    let { data, error } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("trial_end")
       .eq("id", userId)
       .single();
 
-    // No row yet — create one with a 7-day trial starting now
-    if (error?.code === "PGRST116" || !data) {
+    // PGRST116 = no rows found — create the profile row now
+    if (error?.code === "PGRST116" || (!error && !data)) {
       const trialEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-      const { data: upserted } = await supabase
+      const { data: upserted, error: upsertErr } = await supabase
         .from("profiles")
-        .upsert({ id: userId, trial_start: new Date().toISOString(), trial_end: trialEnd })
+        .upsert(
+          { id: userId, trial_start: new Date().toISOString(), trial_end: trialEnd },
+          { onConflict: "id" }
+        )
         .select("trial_end")
         .single();
-      data = upserted;
+
+      if (upsertErr || !upserted?.trial_end) return { active: false, trialEnds: null };
+      return { active: true, trialEnds: upserted.trial_end };
     }
 
-    if (!data?.trial_end) return { active: false, trialEnds: null };
+    if (error || !data?.trial_end) return { active: false, trialEnds: null };
 
-    const trialEnd = new Date(data.trial_end).getTime();
-    if (Number.isNaN(trialEnd)) return { active: false, trialEnds: null };
+    const trialEndMs = new Date(data.trial_end).getTime();
+    if (Number.isNaN(trialEndMs)) return { active: false, trialEnds: null };
 
-    const active = Date.now() < trialEnd;
-    return { active, trialEnds: data.trial_end };
+    return { active: Date.now() < trialEndMs, trialEnds: data.trial_end };
   } catch {
     return { active: false, trialEnds: null };
   }
@@ -77,40 +77,52 @@ async function checkTrialActive(
 
 // ─── Provider ─────────────────────────────────────────────────
 
-export const PaymentProvider: React.FC<Props> = ({ user = null, children }) => {
-  const [status, setStatus]           = useState<SubscriptionStatus>("none");
+export const PaymentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Read user directly from AppContext — no prop threading needed
+  const { user } = useAppContext();
+
+  const [status, setStatus]             = useState<SubscriptionStatus>("none");
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
-  const [isLoading, setIsLoading]     = useState(false);
+  const [isLoading, setIsLoading]       = useState(false);
+  // True while the initial trial/stripe check is in-flight.
+  // ProtectedRoute must wait for this before deciding to redirect.
+  const [isChecking, setIsChecking]     = useState(true);
 
-  const refresh = async (userId: string, email: string) => {
-    // 1. Check trial period first (fast, no Stripe call)
-    const trial = await checkTrialActive(userId);
-
-    if (trial.active) {
-      setStatus("trial");
-      setSubscription({ plan: "trial", current_period_end: null, trialEnds: trial.trialEnds });
+  const refresh = async () => {
+    if (!user?.id || !user?.email) {
+      setStatus("none");
+      setSubscription(null);
+      setIsChecking(false);
       return;
     }
 
-    // 2. Trial expired — check Stripe for paid subscription
-    const stripeActive = await checkStripeSubscription(userId, email);
+    setIsChecking(true);
+    try {
+      // 1. Check trial first (fast — no Stripe call)
+      const trial = await checkTrialActive(user.id);
+      if (trial.active) {
+        setStatus("trial");
+        setSubscription({ plan: "trial", current_period_end: null, trialEnds: trial.trialEnds });
+        return;
+      }
 
-    if (stripeActive) {
-      setStatus("active");
-      setSubscription({ plan: "full", current_period_end: null });
-    } else {
-      setStatus("none");
-      setSubscription(null);
+      // 2. Trial expired — check Stripe for paid subscription
+      const stripeActive = await checkStripeSubscription(user.id, user.email);
+      if (stripeActive) {
+        setStatus("active");
+        setSubscription({ plan: "full", current_period_end: null });
+      } else {
+        setStatus("none");
+        setSubscription(null);
+      }
+    } finally {
+      setIsChecking(false);
     }
   };
 
+  // Re-check whenever the logged-in user changes
   useEffect(() => {
-    if (user?.id && user?.email) {
-      refresh(user.id, user.email);
-    } else {
-      setStatus("none");
-      setSubscription(null);
-    }
+    refresh();
   }, [user?.id]);
 
   const subscribe = async (paymentMethodId: string) => {
@@ -135,23 +147,18 @@ export const PaymentProvider: React.FC<Props> = ({ user = null, children }) => {
     setIsLoading(true);
     try {
       const res = await cancelSubscription(user.id, user.email);
-      if (res.status === "canceled") {
-        setStatus("canceling");
-      }
+      if (res.status === "canceled") setStatus("canceling");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // isSubscribed = true during trial OR active paid plan
-  const isSubscribed = DEV_MODE
-    ? true
-    : status === "trial" || status === "active";
-
-  const resolvedStatus: SubscriptionStatus = DEV_MODE ? "active" : status;
-  const resolvedSubscription: SubscriptionInfo | null = DEV_MODE
-    ? { plan: "full", current_period_end: null }
-    : subscription;
+  // isSubscribed = true for trial OR active paid plan
+  const isSubscribed        = DEV_MODE ? true : status === "trial" || status === "active";
+  const resolvedStatus      = DEV_MODE ? "active" as SubscriptionStatus : status;
+  const resolvedSubscription = DEV_MODE ? { plan: "full", current_period_end: null } : subscription;
+  // Expose isChecking as `loading` so ProtectedRoute waits before redirecting
+  const resolvedLoading     = DEV_MODE ? false : isLoading || isChecking;
 
   return (
     <PaymentContext.Provider
@@ -159,8 +166,8 @@ export const PaymentProvider: React.FC<Props> = ({ user = null, children }) => {
         status: resolvedStatus,
         isSubscribed,
         subscription: resolvedSubscription,
-        loading: isLoading,
-        isLoading,
+        loading: resolvedLoading,
+        isLoading: resolvedLoading,
         subscribe,
         cancel,
         refresh,
