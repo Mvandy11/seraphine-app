@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useOracleContext } from "@/contexts/OracleContext";
+import { useDeckContext } from "@/contexts/DeckContext";
 import OracleConsole from "@/components/OracleConsole";
 import CardOfTheDayPreview from "@/components/CardOfTheDayPreview";
 import CardReveal from "@/components/CardReveal";
@@ -11,10 +12,10 @@ import { POOL_OPTIONS, PoolId } from "@/data/deckIndex";
 
 export default function Oracle() {
   const { state } = useOracleContext();
+  const { selectedDeck, setSelectedDeck } = useDeckContext();
   const emotion = state.emotion;
 
-  const [birthday, setBirthday]         = useState<BirthdayArchetype | null>(null);
-  const [selectedDeck, setSelectedDeck] = useState<PoolId>("major1");
+  const [birthday, setBirthday] = useState<BirthdayArchetype | null>(null);
 
   const portrait = emotion
     ? `/art/seraphine/emotion/${emotion}.png`

@@ -1,35 +1,26 @@
-// ------------------------------------------------------------
-// ⭐ UPDATED — /src/pages/CardOfTheDay.tsx
-// (add SaveReadingButton)
-// ------------------------------------------------------------
-
 import { useDailyCard } from "@/hooks/useDailyCard";
+import { useDeckContext } from "@/contexts/DeckContext";
 import { speak } from "@/utils/speak";
-import { useOracleContext } from "@/contexts/OracleContext";
 import CardReveal from "@/components/CardReveal";
 import SaveReadingButton from "@/components/SaveReadingButton";
+import DeckSelector from "@/components/DeckSelector";
+import { POOL_OPTIONS } from "@/data/deckIndex";
 
 export default function CardOfTheDay() {
-  const daily = useDailyCard();
-  const { state } = useOracleContext();
+  const { selectedDeck, setSelectedDeck } = useDeckContext();
+  const daily = useDailyCard(selectedDeck);
 
   if (!daily) return null;
 
   const { card, emotion, message } = daily;
 
   const aura =
-    emotion === "serene"
-      ? "radial-gradient(circle, rgba(124,58,237,0.2), transparent)"
-      : emotion === "fierce"
-      ? "radial-gradient(circle, rgba(255,0,80,0.25), transparent)"
-      : emotion === "sorrow"
-      ? "radial-gradient(circle, rgba(0,0,0,0.4), transparent)"
-      : "radial-gradient(circle, rgba(255,255,255,0.3), transparent)";
+    emotion === "serene"   ? "radial-gradient(circle, rgba(124,58,237,0.2), transparent)"  :
+    emotion === "fierce"   ? "radial-gradient(circle, rgba(255,0,80,0.25), transparent)"   :
+    emotion === "sorrow"   ? "radial-gradient(circle, rgba(0,0,0,0.4), transparent)"       :
+                             "radial-gradient(circle, rgba(255,255,255,0.3), transparent)";
 
-  const bg =
-    emotion === "sorrow"
-      ? "/art/backgrounds/oracle.jpg"
-      : "/art/backgrounds/hero.jpg";
+  const bg = emotion === "sorrow" ? "/art/backgrounds/oracle.jpg" : "/art/backgrounds/hero.jpg";
 
   return (
     <div
@@ -71,6 +62,37 @@ export default function CardOfTheDay() {
           }}
         />
 
+        {/* ── Deck selector ─────────────────────────────────── */}
+        <div style={{ width: "100%", maxWidth: "720px" }}>
+          <p
+            style={{
+              textAlign: "center",
+              color: "rgba(255,255,255,0.55)",
+              fontSize: "0.8rem",
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              marginBottom: "10px",
+            }}
+          >
+            Choose your deck
+          </p>
+          <DeckSelector
+            active={selectedDeck}
+            onChange={(id) => setSelectedDeck(id as typeof selectedDeck)}
+            options={POOL_OPTIONS}
+          />
+          <p
+            style={{
+              textAlign: "center",
+              color: "rgba(255,255,255,0.35)",
+              fontSize: "0.75rem",
+              marginTop: "6px",
+            }}
+          >
+            Today's card is locked. Deck selection takes effect tomorrow.
+          </p>
+        </div>
+
         <CardReveal card={card} />
 
         <div
@@ -103,11 +125,7 @@ export default function CardOfTheDay() {
 
         <SaveReadingButton
           type="daily"
-          payload={{
-            card,
-            emotion,
-            message,
-          }}
+          payload={{ card, emotion, message }}
         />
       </div>
     </div>

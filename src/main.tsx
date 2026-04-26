@@ -6,6 +6,7 @@ import "./index.css";
 import { AppProvider } from "@/contexts/AppContext";
 import { PaymentProvider } from "@/contexts/PaymentContext";
 import { OracleProvider } from "@/contexts/OracleContext";
+import { DeckProvider } from "@/contexts/DeckContext";
 import { BrowserRouter } from "react-router-dom";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
@@ -14,7 +15,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <AppProvider>
         <PaymentProvider>
           <OracleProvider>
-            <App />
+            <DeckProvider>
+              <App />
+            </DeckProvider>
           </OracleProvider>
         </PaymentProvider>
       </AppProvider>

@@ -1,14 +1,18 @@
 import { useState } from "react";
-import { decks, DeckCard } from "@/data/deckIndex";
+import { decks, DeckCard, PoolId } from "@/data/deckIndex";
+import { useDeckContext } from "@/contexts/DeckContext";
 import DeckSelector from "@/components/DeckSelector";
 import CardGrid from "@/components/CardGrid";
 import CardModal from "@/components/CardModal";
 
 export default function DeckMenu() {
-  const [activeDeck, setActiveDeck]       = useState("major1");
+  const { selectedDeck, setSelectedDeck } = useDeckContext();
   const [selectedCard, setSelectedCard]   = useState<DeckCard | null>(null);
 
-  const deck = decks.find((d) => d.id === activeDeck) ?? decks[0];
+  // Vault shows the 5 concrete deck definitions; fall back to major1 if a
+  // pool-only id (full-major, full-tarot) was selected in Oracle.
+  const deck =
+    decks.find((d) => d.id === selectedDeck) ?? decks[0];
 
   return (
     <div
@@ -44,7 +48,10 @@ export default function DeckMenu() {
           The Mythic Vault
         </h1>
 
-        <DeckSelector active={activeDeck} onChange={setActiveDeck} />
+        <DeckSelector
+          active={selectedDeck}
+          onChange={(id) => setSelectedDeck(id as PoolId)}
+        />
 
         <CardGrid cards={deck.cards} onSelect={setSelectedCard} />
 

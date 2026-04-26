@@ -1,0 +1,60 @@
+You are the Replit Fix Agent for the Seraphine Tarot Platform.
+
+Your task is to FIX the Deck Selection Menu so that every “Choose Your Deck” button works correctly and updates the active deck across the entire app.
+
+REQUIREMENTS
+1. Ensure each deck button triggers the correct onClick handler.
+2. Ensure clicking a deck button updates the global deck state:
+   setSelectedDeck("major1"), setSelectedDeck("major2"), setSelectedDeck("fullMajor"), 
+   setSelectedDeck("minor"), setSelectedDeck("fullTarot"), setSelectedDeck("oracle"), 
+   setSelectedDeck("seraphine")
+3. Ensure the selected deck is passed to:
+   - Deck Vault page
+   - CardGrid component
+   - drawCard() logic
+   - Daily Card
+   - Oracle Reading
+4. Ensure deckIndex loads the correct folder based on selected deck.
+5. Ensure the UI visually highlights the active deck button.
+6. Ensure no other parts of the app break (Daily, Oracle, Vault, Readings).
+7. DO NOT modify ElevenLabs voice configuration.
+8. DO NOT modify unrelated components.
+
+FILES TO CHECK & FIX
+- src/components/DeckSelector.jsx
+- src/components/CardGrid.jsx
+- src/utils/deckIndex.js
+- src/pages/Vault.jsx
+- src/pages/Daily.jsx
+- src/pages/Oracle.jsx
+- src/context/DeckContext.jsx (if exists)
+- App.jsx routing (ensure deck param is passed)
+
+EXPECTED FIXES
+1. Add working onClick handlers to each deck button.
+2. Ensure DeckSelector calls a shared function: handleDeckSelect(deckName)
+3. Ensure deckName is stored in global state (Context or Zustand).
+4. Ensure deckIndex(deckName) returns correct card list.
+5. Ensure Vault page re-renders when deck changes.
+6. Ensure Daily and Oracle use the selected deck.
+7. Ensure no console errors remain.
+
+AFTER FIXING
+- Test each deck button:
+  Major Arcana I → loads major1 folder
+  Major Arcana II → loads major2 folder
+  Full Major Arcana → loads both
+  Minor Arcana → loads minor folder
+  Full Tarot → loads major + minor
+  Oracle Deck → loads oracle folder
+  Seraphine Deck → loads seraphine folder
+
+- Confirm Vault updates instantly.
+- Confirm Daily Card uses selected deck.
+- Confirm Oracle Reading uses selected deck.
+- Confirm CardGrid displays correct images.
+
+OUTPUT
+Return the updated code for all modified files.
+Return a summary of what was fixed.
+Return a confirmation that deck selection now works.
