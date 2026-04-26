@@ -5,13 +5,16 @@ import CardOfTheDayPreview from "@/components/CardOfTheDayPreview";
 import CardReveal from "@/components/CardReveal";
 import SaveReadingButton from "@/components/SaveReadingButton";
 import BirthdayInput from "@/components/BirthdayInput";
+import DeckSelector from "@/components/DeckSelector";
 import { getBirthdayArchetype, BirthdayArchetype } from "@/utils/birthdayEngine";
+import { POOL_OPTIONS, PoolId } from "@/data/deckIndex";
 
 export default function Oracle() {
   const { state } = useOracleContext();
   const emotion = state.emotion;
 
-  const [birthday, setBirthday] = useState<BirthdayArchetype | null>(null);
+  const [birthday, setBirthday]         = useState<BirthdayArchetype | null>(null);
+  const [selectedDeck, setSelectedDeck] = useState<PoolId>("major1");
 
   const portrait = emotion
     ? `/art/seraphine/emotion/${emotion}.png`
@@ -72,7 +75,28 @@ export default function Oracle() {
           }}
         />
 
-        {/* Birthday archetype input */}
+        {/* ── Deck / Pool Selector ─────────────────────────────── */}
+        <div style={{ width: "100%", maxWidth: "720px" }}>
+          <p
+            style={{
+              textAlign: "center",
+              color: "rgba(255,255,255,0.55)",
+              fontSize: "0.8rem",
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              marginBottom: "10px",
+            }}
+          >
+            Choose your deck
+          </p>
+          <DeckSelector
+            active={selectedDeck}
+            onChange={(id) => setSelectedDeck(id as PoolId)}
+            options={POOL_OPTIONS}
+          />
+        </div>
+
+        {/* ── Birthday archetype ───────────────────────────────── */}
         {!birthday ? (
           <BirthdayInput
             onSubmit={(month, day) => {
@@ -113,15 +137,16 @@ export default function Oracle() {
           </div>
         )}
 
+        {/* ── Spread reveal ────────────────────────────────────── */}
         {state.spread && (
-          <div style={{ display: "flex", gap: "20px" }}>
+          <div style={{ display: "flex", gap: "20px", flexWrap: "wrap", justifyContent: "center" }}>
             {state.spread.map((card, i) => (
               <CardReveal key={i} card={card} />
             ))}
           </div>
         )}
 
-        <OracleConsole birthday={birthday} />
+        <OracleConsole birthday={birthday} deckId={selectedDeck} />
 
         {state.answer && (
           <div

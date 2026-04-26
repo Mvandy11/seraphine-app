@@ -1,0 +1,167 @@
+SCOPED TASK — Unified Deck Expansion, Selector UI, Minor Arcana Fix & Voice Protection
+
+CRITICAL CONSTRAINTS — READ FIRST
+
+ONLY modify files directly related to the 5 tasks below.
+
+DO NOT modify, refactor, rename, or touch ANY ElevenLabs voice configuration, API keys, environment variables, or voice-related code. The voice ID ksryVoNAGZT8GxWCTiVm and env var VITE_ELEVENLABS_VOICE_ID must remain EXACTLY as they are. Do not change any file that imports or calls ElevenLabs unless the edit is strictly limited to card/deck logic in that same file — and even then, leave every line of voice code untouched.
+
+DO NOT change the app's visual theme, global layout, Supabase config, authentication, API routes, or any functionality outside of deck/card features.
+
+DO NOT rename, move, or delete any existing image files in public/cards/major/, public/cards/oracle/, or public/cards/seraphine/.
+
+DO NOT install, remove, or update any packages unrelated to these tasks.
+
+Preserve all existing imports, exports, component interfaces, and TypeScript types unless a task explicitly requires changing them.
+
+TASK 1 — Create public/cards/major2/ folder
+
+Create the directory public/cards/major2/. This will hold the second Major Arcana deck (22 cards). Mirror the exact filename convention used in public/cards/major/. For example if deck 1 uses 00-the-fool.webp, 01-the-magician.webp, etc., create the same pattern expectation for major2/. For now just create the empty directory — I will add the image files separately. Add a .gitkeep file inside so the empty folder is tracked by git.
+
+TASK 2 — Rebuild the deck index so ALL cards load
+
+Find the existing deck index or card data file (search src/ for where card definitions, card arrays, or card JSON are stored — likely in src/data/, src/lib/, or src/config/). Rebuild it to register cards from ALL of these sources:
+
+Deck ID	Display Name	Folder Path	Card Count
+major1	Major Arcana I	public/cards/major/	22 (0–21)
+major2	Major Arcana II	public/cards/major2/	22 (0–21)
+minor	Minor Arcana	public/cards/minor/	56 (4 suits × 14)
+oracle	Oracle Deck	public/cards/oracle/	scan folder for files
+seraphine	Seraphine Deck	public/cards/seraphine/	scan folder for files
+
+
+Each deck entry must have:
+
+id — unique string identifier
+
+name — human-readable display name
+
+basePath — path to the card images folder (relative to public root, e.g. /cards/major/)
+
+cards — array where each card has: id (string), name (string), image (filename string), upright (meaning string), reversed (meaning string)
+
+For Major Arcana decks: Use standard tarot card names — The Fool (0) through The World (21). Both major1 and major2 have the same 22 archetypes, just different art.
+
+For Minor Arcana: Use four suits — Wands, Cups, Swords, Pentacles. Each suit has 14 cards: Ace, 2, 3, 4, 5, 6, 7, 8, 9, 10, Page, Knight, Queen, King. Include standard upright/reversed meanings for all 56 cards. If public/cards/minor/ doesn't exist yet, create it with the expected subfolder structure: minor/wands/, minor/cups/, minor/swords/, minor/pentacles/. Add .gitkeep files.
+
+For Oracle and Seraphine: Scan the existing folders for image files and create entries matching each file found. If files exist, derive card names from filenames (e.g. cosmic-mirror.webp → "Cosmic Mirror"). If no files exist yet, create a minimal placeholder array.
+
+Export the complete deck index as a named export so any component can import it. Also export a TypeScript type/interface for Deck and Card.
+
+TASK 3 — Add a Deck Selector UI component
+
+Create a deck selector and integrate it into the reading/spread UI. Requirements:
+
+Placement: Above or beside the card spread area. Do NOT replace or rearrange any existing UI elements.
+
+Options to show (as a styled dropdown, segmented control, or button group):
+
+"Major Arcana I" → draws from major1 only
+
+"Major Arcana II" → draws from major2 only
+
+"Full Major Arcana" → draws randomly from both major1 + major2 combined pool
+
+"Minor Arcana" → draws from minor only
+
+"Full Tarot" → combines major1 + minor (standard 78-card deck)
+
+"Oracle Deck" → draws from oracle
+
+"Seraphine Deck" → draws from seraphine
+
+Behavior:
+
+Store selected deck in React state (default: "major1")
+
+When selection changes, rebuild the active card pool passed to the draw/reading logic
+
+The card draw function must pull from the selected pool — no hardcoded references to a single deck
+
+Persist selection across readings within the same session (don't reset on each draw)
+
+Styling:
+
+Match the existing app theme — dark/cosmic aesthetic
+
+Use existing CSS variables, Tailwind classes, or styled-components already in the project
+
+Do NOT introduce a new CSS framework or design system
+
+The selector should feel like a natural part of the existing UI, not bolted on
+
+TASK 4 — Fix Minor Arcana behavior in readings
+
+Find the card draw and reading logic (the function that selects random cards for a spread/reading). Fix it so:
+
+Minor Arcana cards draw correctly when "Minor Arcana" or "Full Tarot" is the selected deck
+
+Each Minor Arcana card displays properly: card name, suit, image, and upright/reversed meaning — rendered identically to how Major Arcana cards render
+
+Reversed state works: The reversed/upside-down logic (random chance of reversal, CSS rotation, meaning swap) must apply to Minor Arcana cards exactly the same as Major Arcana
+
+No crashes or undefined references: If any component accesses card properties like .arcana or .number that only exist on Major cards, add graceful handling for Minor cards
+
+API payloads include Minor Arcana: If readings send card data to Supabase or any API endpoint, ensure Minor Arcana card names, suits, and meanings are included in the request payload — not just Major Arcana fields
+
+TASK 5 — Verify and protect ElevenLabs voice configuration
+
+This is a verification and protection task, not a modification task.
+
+Verify all of the following are intact after Tasks 1–4:
+
+Environment variable VITE_ELEVENLABS_VOICE_ID exists and equals ksryVoNAGZT8GxWCTiVm
+
+The ElevenLabs API key env var (likely VITE_ELEVENLABS_API_KEY) is present and unchanged
+
+Any component or hook that handles voice playback (text-to-speech, audio generation) has zero modifications from these tasks
+
+No ElevenLabs-related npm packages were added, removed, or version-changed
+
+Voice playback still triggers correctly during readings (the speak/voice button still calls ElevenLabs with the correct voice ID)
+
+If any voice-related code was accidentally modified during Tasks 1–4, revert those specific changes immediately.
+
+VERIFICATION CHECKLIST — Complete all before finishing
+
+Run the app and confirm:
+
+[ ] public/cards/major2/ directory exists (with .gitkeep)
+
+[ ] public/cards/minor/ directory exists with suit subfolders (or was already present)
+
+[ ] Deck index file exports all deck definitions with correct paths and card arrays
+
+[ ] TypeScript compiles with no errors (npx tsc --noEmit)
+
+[ ] Deck selector renders in the reading UI with all 7 options
+
+[ ] Selecting "Major Arcana I" draws cards from public/cards/major/ — existing behavior preserved
+
+[ ] Selecting "Minor Arcana" draws and displays cards without errors
+
+[ ] Selecting "Full Tarot" draws from a 78-card combined pool
+
+[ ] Reversed cards display correctly for both Major and Minor Arcana
+
+[ ] ElevenLabs voice plays correctly — voice ID ksryVoNAGZT8GxWCTiVm unchanged
+
+[ ] No console errors on page load, deck switch, or card draw
+
+[ ] No files outside the scope of these 5 tasks were modified
+
+FILES YOU MUST NOT MODIFY
+(identify these files in the project and leave them completely alone)
+
+Any .env or .env.local file (read-only — verify values but do not edit)
+
+Voice/audio playback components or hooks (e.g. useVoice, useElevenLabs, VoicePlayer, AudioContext files)
+
+Supabase client configuration (supabaseClient.ts or similar)
+
+Authentication components or routes
+
+Global theme/layout files (unless adding the deck selector requires a small, additive insertion point)
+
+Package versions in package.json unrelated to these tasks
+

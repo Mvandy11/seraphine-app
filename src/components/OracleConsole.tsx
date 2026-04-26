@@ -1,14 +1,15 @@
 import { useOracleContext } from "@/contexts/OracleContext";
 import { drawSpread } from "@/utils/drawSpread";
-import { cardEmotions } from "@/data/emotions";
+import { getPool, PoolId } from "@/data/deckIndex";
 import { speak } from "@/utils/speak";
 import { BirthdayArchetype, buildBirthdayPromptContext } from "@/utils/birthdayEngine";
 
 interface OracleConsoleProps {
   birthday?: BirthdayArchetype | null;
+  deckId?: PoolId;
 }
 
-export default function OracleConsole({ birthday }: OracleConsoleProps) {
+export default function OracleConsole({ birthday, deckId = "major1" }: OracleConsoleProps) {
   const {
     state,
     setQuestion,
@@ -27,16 +28,30 @@ export default function OracleConsole({ birthday }: OracleConsoleProps) {
     setSpread(null);
 
     setTimeout(() => {
-      const spread = drawSpread("three");
+      const pool     = getPool(deckId);
+      const spread   = drawSpread("three", pool);
       const mainCard = spread[1];
-      const emotion = cardEmotions[mainCard.id];
+
+      // Use the card's own emotion — works for Major, Minor, Oracle, and Seraphine cards
+      const emotion = mainCard.emotion ?? "serene";
 
       setEmotion(emotion);
       setSpread(spread);
 
       const birthdayContext = buildBirthdayPromptContext(birthday ?? null);
 
-      let message = `Seraphine reveals a three‑card spread. The central force is **${mainCard.name}**.`;
+      let message = `Seraphine reveals a three‑card spread. The central force is **${mainCard.name}**`;
+
+      // Include suit name for Minor Arcana cards
+      if (mainCard.suit) {
+        message += ` of ${mainCard.suit.charAt(0).toUpperCase() + mainCard.suit.slice(1)}`;
+      }
+
+      message += ".";
+
+      if (mainCard.isReversed) {
+        message += " The card appears reversed — its energy turns inward.";
+      }
 
       if (birthdayContext) {
         message += ` Seen through the lens of your Life Path ${birthday!.lifePath} and the aura of ${birthday!.elementalAura}, this card speaks directly to your soul's current chapter.`;

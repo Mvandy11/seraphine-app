@@ -1,46 +1,67 @@
+// src/components/DeckSelector.tsx
+// Supports two modes:
+//   1. Vault mode  — no options prop → shows actual decks from deckIndex
+//   2. Oracle mode — pass options prop → shows custom pool choices
+
 import { decks } from "@/data/deckIndex";
 
-export default function DeckSelector({
-  active,
-  onChange,
-}: {
+interface SelectOption {
+  id: string;
+  label: string;
+}
+
+interface DeckSelectorProps {
   active: string;
   onChange: (id: string) => void;
-}) {
+  /** Optional explicit option list (used by Oracle reading for 7-pool mode). */
+  options?: SelectOption[];
+}
+
+export default function DeckSelector({ active, onChange, options }: DeckSelectorProps) {
+  const items: SelectOption[] = options
+    ? options
+    : decks.map((d) => ({ id: d.id, label: d.name }));
+
   return (
     <div
       style={{
         display: "flex",
-        gap: "16px",
+        flexWrap: "wrap",
+        gap: "10px",
         justifyContent: "center",
-        marginBottom: "30px",
+        marginBottom: "24px",
       }}
     >
-      {decks.map((deck) => (
-        <button
-          key={deck.id}
-          onClick={() => onChange(deck.id)}
-          style={{
-            padding: "10px 20px",
-            borderRadius: "10px",
-            border: "1px solid rgba(255,255,255,0.2)",
-            background:
-              active === deck.id
-                ? "rgba(124,58,237,0.4)"
-                : "rgba(255,255,255,0.1)",
-            color: "white",
-            cursor: "pointer",
-            fontSize: "1rem",
-            boxShadow:
-              active === deck.id
-                ? "0 0 20px rgba(124,58,237,0.6)"
+      {items.map((item) => {
+        const isActive = active === item.id;
+        return (
+          <button
+            key={item.id}
+            onClick={() => onChange(item.id)}
+            style={{
+              padding: "8px 18px",
+              borderRadius: "10px",
+              border: isActive
+                ? "1px solid rgba(167,139,250,0.8)"
+                : "1px solid rgba(255,255,255,0.15)",
+              background: isActive
+                ? "rgba(124,58,237,0.45)"
+                : "rgba(255,255,255,0.07)",
+              color: "white",
+              cursor: "pointer",
+              fontSize: "0.9rem",
+              fontWeight: isActive ? 600 : 400,
+              letterSpacing: "0.02em",
+              boxShadow: isActive
+                ? "0 0 18px rgba(124,58,237,0.55)"
                 : "none",
-            transition: "0.2s ease",
-          }}
-        >
-          {deck.name}
-        </button>
-      ))}
+              transition: "all 0.18s ease",
+            }}
+          >
+            {item.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

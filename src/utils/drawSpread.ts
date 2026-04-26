@@ -1,33 +1,43 @@
 // src/utils/drawSpread.ts
 
-import { drawCard } from "./drawCard";
+import { DeckCard, getPool, PoolId } from "@/data/deckIndex";
+import { drawCard, DrawnCard } from "./drawCard";
 
-export function drawSpread(type: "one" | "three" | "celtic") {
+export type SpreadType = "one" | "three" | "celtic";
+
+export interface PositionedCard extends DrawnCard {
+  position?: string;
+}
+
+/**
+ * Draw a spread of cards from the given pool.
+ * Pool defaults to "major1" (original Major Arcana) for backward compatibility.
+ * Reversal (isReversed) applies equally to all card types.
+ */
+export function drawSpread(
+  type: SpreadType,
+  pool?: DeckCard[]
+): PositionedCard[] {
+  const activePool = pool ?? getPool("major1");
+
   if (type === "one") {
-    return [drawCard("major")];
+    return [drawCard(activePool)];
   }
 
   if (type === "three") {
     return [
-      { ...drawCard("major"), position: "past" },
-      { ...drawCard("major"), position: "present" },
-      { ...drawCard("major"), position: "future" },
+      { ...drawCard(activePool), position: "past"    },
+      { ...drawCard(activePool), position: "present" },
+      { ...drawCard(activePool), position: "future"  },
     ];
   }
 
   if (type === "celtic") {
-    return [
-      { ...drawCard("major"), position: "present" },
-      { ...drawCard("major"), position: "challenge" },
-      { ...drawCard("major"), position: "past" },
-      { ...drawCard("major"), position: "future" },
-      { ...drawCard("major"), position: "above" },
-      { ...drawCard("major"), position: "below" },
-      { ...drawCard("major"), position: "self" },
-      { ...drawCard("major"), position: "environment" },
-      { ...drawCard("major"), position: "hopes" },
-      { ...drawCard("major"), position: "outcome" },
+    const positions = [
+      "present", "challenge", "past", "future",
+      "above", "below", "self", "environment", "hopes", "outcome",
     ];
+    return positions.map((position) => ({ ...drawCard(activePool), position }));
   }
 
   return [];

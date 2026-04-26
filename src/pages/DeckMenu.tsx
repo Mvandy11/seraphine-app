@@ -5,10 +5,10 @@ import CardGrid from "@/components/CardGrid";
 import CardModal from "@/components/CardModal";
 
 export default function DeckMenu() {
-  const [activeDeck, setActiveDeck] = useState("major");
-  const [selectedCard, setSelectedCard] = useState<DeckCard | null>(null);
+  const [activeDeck, setActiveDeck]       = useState("major1");
+  const [selectedCard, setSelectedCard]   = useState<DeckCard | null>(null);
 
-  const deck = decks.find((d) => d.id === activeDeck)!;
+  const deck = decks.find((d) => d.id === activeDeck) ?? decks[0];
 
   return (
     <div
