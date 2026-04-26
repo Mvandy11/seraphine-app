@@ -8,6 +8,8 @@ export default function CardReveal({ card }: { card: any }) {
     return () => clearTimeout(t);
   }, [card]);
 
+  const isReversed = !!card.isReversed;
+
   return (
     <div
       style={{
@@ -39,7 +41,7 @@ export default function CardReveal({ card }: { card: any }) {
           }}
         />
 
-        {/* Front of card */}
+        {/* Front of card — rotated 180° if reversed */}
         <div
           style={{
             position: "absolute",
@@ -58,8 +60,26 @@ export default function CardReveal({ card }: { card: any }) {
               width: "100%",
               height: "100%",
               objectFit: "cover",
+              transform: isReversed ? "rotate(180deg)" : "none",
+              transition: "transform 0.3s ease",
             }}
           />
+          {isReversed && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: "8px",
+                left: 0,
+                right: 0,
+                textAlign: "center",
+                fontSize: "0.7rem",
+                color: "rgba(255,255,255,0.55)",
+                letterSpacing: "0.06em",
+              }}
+            >
+              REVERSED
+            </div>
+          )}
         </div>
       </div>
     </div>

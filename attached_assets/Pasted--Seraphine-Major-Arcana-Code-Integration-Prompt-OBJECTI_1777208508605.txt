@@ -1,0 +1,387 @@
+🔮 Seraphine Major Arcana — Code Integration Prompt
+OBJECTIVE
+Integrate the 22 Major Arcana card images located at public/cards/major2/ into the Seraphine Tarot Readings app. Every card must display correctly across all card-rendering Code Integration Prompt
+
+OBJECTIVE
+Integrate the 22 Major Arcana card images located at public/cards/major2/ into the Seraphine Tarot Readings app. Every card must views — the Deck Vault (/deck), Oracle readings (/oracle), Card of the Day (/card-of-the-day), and Readings history (/readings).
+
+STEP 1: DISCOVERY — display correctly across all card-rendering views — the Deck Vault (/deck), Oracle readings (/oracle), Card of the Day (/card-of-the-day), and Readings history (/readings).
+STEP 1: DISCOVERY — Understand the Existing Codebase
+Before making ANY changes, map the project:
+
+Identify the framework — check package.json for React Understand the Existing Codebase
+
+Before making ANY changes, map the project:
+
+Identify the framework — check package.json for React, Next.js, Vite, Express, etc.
+
+Find the card data source — search the entire project for where card names, meanings, and image paths are defined. Look for:
+
+A, Next.js, Vite, Express, etc.
+
+Find the card data source — search the entire project for where card names, meanings, and image paths are defined. Look for:
+
+A data file (e.g., cardData.ts, cards.js, tarotCards.json, deck.ts, or similar)
+
+A database seed file or schema that stores card records data file (e.g., cardData.ts, cards.js, tarotCards.json, deck.ts, or
+
+Any existing major/ or major1/ image directory already referenced in the code
+similar)
+
+A database seed file or schema that stores card records
+
+Any existing major/ or major1/ image directory already referenced in the code
+
+Grep for strings like "The Fool", "Major", "arcana", "card", imagePath, imageUrl, or "/- Grep for strings like"The Fool","Major","arcana","card",imagePath,imageUrl, or"/cards/"` across all source files
+
+Find the card display components — locate the React/JSX components that render cards. Look for:
+
+Acards/"` across all source files
+
+Find the card display components — locate the React/JSX components that render cards. Look for:
+
+A Card or TarotCard component
+
+The Deck Vault page component (likely at a route like /deck)
+
+The Oracle reading component
+
+The Card of the Day component Card or TarotCard component
+
+The Deck Vault page component (likely at a route like /deck)
+
+The Oracle reading component
+
+The Card of the Day component
+
+Check for an API layer — determine if cards are fetched from a backend API (/api/cards, /api/deck, etc.) or loaded from static config
+
+Report what you find before
+
+Check for an API layer — determine if cards are fetched from a backend API (/api/cards, /api/deck, etc.) or loaded from static proceeding. List: the framework, the card data source location, the image path pattern currently used, and the components that render cards.
+
+STEP config
+Report what you find before proceeding. List: the framework, the card data source location, the image path pattern currently used, and the components that render cards.
+
+STEP 2: CARD DATA — The Complete Major Arcana Dataset
+The 22 card images are already uploaded at public/cards/major2/. Here is the ** 2: CARD DATA — The Complete Major Arcana Dataset
+
+The 22 card images are already uploaded at public/cards/major2/. Here is the exact data to use. The image path for each card is /cards/major2/{filename}:
+
+| Number | Name | Filename | Upright Keywords | Reversed Keywords |exact data** to use. The image path for each card is /cards/major2/{filename}:
+
+Number	Name	Filename	Upright Keywords	Reversed Keywords
+0	The Fool	00-the-fool.png	New beginnings, innocence, spontaneity, free spirit	Recklessness, fear, risk
+--------	------	----------	-----------------	-------------------
+0	The Fool	00-the-fool.png	New beginnings, innocence, spontaneity, free spirit	Recklessness, fear, risk-averse, naivety
+1	The Magician	01-the-magician.png	Willpower, manifestation, resource-averse, naivety
+1	The Magician	01-the-magician.png	Willpower, manifestation, resourcefulness, skill	Manipulation, untapped potential, trickery
+2	The High Priestess	02-the-high-priestess.png	Intuition, mystery, inner knowledge, the subconscious	Secrets, withdrawal, silence, repressed intuition
+3	The Empress	03-the-empress.png	Abundance, nurturing, fertility, nature, sensuality	Dependence, emptiness, creative block, smothering
+4	The Emperor	`04-thefulness, skill	Manipulation, untapped potential, trickery
+2	The High Priestess	02-the-high-priestess.png	Intuition, mystery, inner knowledge, the subconscious	Secrets, withdrawal, silence, repressed intuition
+3	The Empress	03-the-empress.png	Abundance, nurturing, fertility, nature, sensuality	Dependence, emptiness, creative block, smothering
+4	The Emperor	04-the-emperor.png	Authority, structure, stability, father figure	Domination, rigidity, stubbornness, loss of control
+5	The Hierophant	05-the-hierophant.png	Tradition, spiritual wisdom, conformity, ment-emperor.png`	Authority, structure, stability, father figure	Domination, rigidity, stubbornness, loss of control
+5	The Hierophant	05-the-hierophant.png	Tradition, spiritual wisdom, conformity, mentorship	Rebellion, subversion, unorthodoxy, restriction
+6	The Lovers	06-the-lovers.png	Love, harmony, relationships, alignment, choices	Disharmony, imbalance, misalignment, indorship	Rebellion, subversion, unorthodoxy, restriction
+6	The Lovers	06-the-lovers.png	Love, harmony, relationships, alignment, choices	Disharmony, imbalance, misalignment, indecision
+7	The Chariot	07-the-chariot.png	Determination, willpower, triumph, control	Aggression, lack of direction, obstacles, defeat
+8	Strength	08-strength.png	Courage, inner strength, compassion, patience	Self-doubt, weakness, insecurity, raw emotion
+9	The Hermit	`09-ecision
+7	The Chariot	07-the-chariot.png	Determination, willpower, triumph, control	Aggression, lack of direction, obstacles, defeat
+8	Strength	08-strength.png	Courage, inner strength, compassion, patience	Self-doubt, weakness, insecurity, raw emotion
+9	The Hermit	09-the-hermit.png	Soul-searching, introspection, solitude, inner guidance	Isolation, loneliness, withdrawal, lost
+10	Wheel of Fortune	10-wheel-of-fortune.png	Change, cycles, fate, turningthe-hermit.png`	Soul-searching, introspection, solitude, inner guidance	Isolation, loneliness, withdrawal, lost
+10	Wheel of Fortune	10-wheel-of-fortune.png	Change, cycles, fate, turning point, destiny	Bad luck, resistance to change, breaking cycles
+11	Justice	11-justice.png	Fairness, truth, law, cause and effect, clarity	Injustice, dishonesty, lack of accountability	point, destiny	Bad luck, resistance to change, breaking cycles
+11	Justice	11-justice.png	Fairness, truth, law, cause and effect, clarity	Injustice, dishonesty, lack of accountability
+12	The Hanged Man	12-the-hanged-man.png	Surrender, letting go, new perspective, pause	Stalling, resistance, indecision, martyrdom
+13	Death	13-death.png	Transformation, endings, transition, release
+12	The Hanged Man	12-the-hanged-man.png	Surrender, letting go, new perspective, pause	Stalling, resistance, indecision, martyrdom
+13	Death	13-death.png	Transformation, endings, transition, release	Resistance to change, fear of endings, stagnation
+14	Temperance	14-temperance.png	Balance, patience, moderation, harmony, purpose	Imbalance, excess, lack of long-term vision
+15	The Devil	15-the-devil.png	Bondage, materialism, shadow self, attachment	Release, freedom, reclaiming power,	Resistance to change, fear of endings, stagnation
+14	Temperance	14-temperance.png	Balance, patience, moderation, harmony, purpose	Imbalance, excess, lack of long-term vision
+15	The Devil	15-the-devil.png	Bondage, materialism, shadow self, attachment	Release, freedom, reclaiming power, detachment
+16	The Tower	16-the-tower.png	Upheaval, sudden change, revelation, awakening	Fear of change, averting disaster, delaying the inevitable
+17	The Star	17-the-star.png	Hope, renewal detachment
+16	The Tower	16-the-tower.png	Upheaval, sudden change, revelation, awakening	Fear of change, averting disaster, delaying the inevitable
+17	The Star	17-the-star.png	Hope, renewal, serenity, inspiration, faith	Despair, disconnection, lack of faith, discouragement
+18	The Moon	18-the-moon.png	Illusion, intuition, dreams, the unconscious, fear	Clarity, release, serenity, inspiration, faith	Despair, disconnection, lack of faith, discouragement
+18	The Moon	18-the-moon.png	Illusion, intuition, dreams, the unconscious, fear	Clarity, release of fear, truth revealed, confidence
+19	The Sun	19-the-sun.png	Joy, success, vitality, confidence, celebration	Sadness, temporary setbacks, blocked happiness
+20	Judgement	`20-judgement. of fear, truth revealed, confidence
+19	The Sun	19-the-sun.png	Joy, success, vitality, confidence, celebration	Sadness, temporary setbacks, blocked happiness
+20	Judgement	20-judgement.png	Rebirth, reflection, reckoning, inner calling	Self-doubt, refusal of self-examination, stagnation
+21	The World	21-the-world.png	Completion, accomplishment, wholeness, fulfillment	Incompletion, stagnation, lack of closure, emptiness
+
+
+STEP 3: INTEGRATION — Wirepng` | Rebirth, reflection, reckoning, inner calling | Self-doubt, refusal of self-examination, stagnation |
+| 21 | The World | 21-the-world.png | Completion, accomplishment, wholeness, fulfillment | Incompletion, stagnation, lack of closure, emptiness |
+
+STEP 3: INTEGRATION — Wire Up the Images
+Based on what you discovered in Step 1, do the following:
+
+A. Update or Create the Card Data Source Up the Images
+Based on what you discovered in Step 1, do the following:
+
+A. Update or Create the Card Data Source
+If a card data file exists (JS/TS/JSON array of card objects), update the Major Arcana entries to point to the new
+
+If a card data file exists (JS/TS/JSON array of card objects), update the Major Arcana entries to point to the new major2 images. Set each card's image path to /cards/major2/{filename} using the exact filenames above.
+
+If no card data file exists, create one major2 images. Set each card's image path to /cards/major2/{filename} using the exact filenames above.
+
+If no card data file exists, create one (e.g., src/data/majorArcana.ts or wherever the project convention dictates). Export an array of card objects with this structure per card:
+
+Code
+
+
+Copy
+{
+  number: 0,
+  name: "The Fool",
+  arcana: "major",
+  image: "/cards/major2/00-the-fool.png",
+  uprightKeywords: ["New beginnings", "innocence", " (e.g., `src/data/majorArcana.ts` or wherever the project convention dictates). Export an array of card objects with this structure per card:
+{
+numberspontaneity", "free spirit"],
+reversedKeywords: ["Recklessness", "fear", "risk-averse", "naivety"]
+}
+
+Code
+
+
+Copy
+- If **cards are stored in a database**, update the seed/migration to use the new image paths. Ensure the image: 0,
+  name: "The Fool",
+  arcana: "major",
+  image: "/cards/major2/00-the-fool.png",
+  uprightKeywords: ["New beginnings", "innocence", "spontaneity", "free spirit"],
+  reversedKeywords: ["Recklessness", "fear", "risk-averse", "naivety"]
+}
+If cards are stored in a database, update the seed/migration to use the new image paths. Ensure the image column/field for all 22 Major Arcana cards points to /cards/major2/{filename}.
+
+B. Update Card Display Components
+Find every component that renders a card image column/field for all 22 Major Arcana cards points to /cards/major2/{filename}.
+
+B. Update Card Display Components
+Find every component that renders a card image (Deck Vault grid, Oracle spread, Card of the Day, Reading history cards).
+
+Ensure the <img> or image component uses the correct base path. The images (Deck Vault grid, Oracle spread, Card of the Day, Reading history cards).
+
+Ensure the <img> or image component uses the correct base path. The images are served from the public/ directory, so the src should be /cards/major2/{filename} — not public/cards/major2/{filename}.
+
+If are served from the public/ directory, so the src should be /cards/major2/{filename} — not public/cards/major2/{filename}.
+
+If the app uses a card-back image for unrevealed cards, do NOT change that — only update the face/front image paths.
+
+C. Ensure the Deck Vault Page (/deck) Works
+The Vault should display all the app uses a card-back image for unrevealed cards, do NOT change that — only update the face/front image paths 22 Major Arcana cards in a grid.
+
+Each card should show its image and name.
+
+If the Vault has click-to-expand.
+
+C. Ensure the Deck Vault Page (/deck) Works
+The Vault should display all 22 Major Arcana cards in a grid.
+
+Each card should show its image and name.
+
+If the Vault has click-to-expand or modal detail view, ensure the full-size image loads correctly.
+
+Cards should appear in order from 0 (The Fool) to 21 (The World).
+
+D. or modal detail view, ensure the full-size image loads correctly.
+Cards should appear in order from 0 (The Fool) to 21 (The World).
+
+D. Ensure Oracle / Readings Work
+When a card is drawn for a reading (Oracle, Card of the Day, or any spread), the correct Ensure Oracle / Readings Work
+
+When a card is drawn for a reading (Oracle, Card of the Day, or any spread), the correct major2 image must appear.
+
+Verify that both upright and reversed display states work — if reversed cards flip the image via CSS transform, the new images should work identically to the old ones.
+
+STEP 4: VERIFY IMAGE PATHS
+After wiring everything up, verify that all 22 images are accessible. Check that these files exist and are load major2 image must appear.
+
+Verify that both upright and reversed display states work — if reversed cards flip the image via CSS transform, the new images should work identically to the old ones.
+
+STEP 4: VERIFY IMAGE PATHS
+After wiring everything up, verify that all 22 images are accessible. Check that these files exist and are loadable:
+
+Code
+
+
+Copy
+public/cards/major2/00-the-fool.png
+public/cards/major2/01-the-magician.png
+public/cards/major2/02-the-high-priestess.png
+public/cards/major2/03-the-empress.png
+public/cards/major2/04-the-emperor.png
+public/cards/major2/05-the-hierophant.png
+public/cards/major2/06-the-lovers.png
+public/cards/major2/07-the-chariot.png
+publicable:
+
+public/cards/major2/00-the-fool.png
+public/cards/major2/01-the-magician.png
+public/cards/major2/02-the-high-priestess.png
+public/cards/major2/03-the-empress.png
+public/cards/major2/04-the-emperor.png
+public/cards/major2/05-the-hierophant.png
+public/cards/major2/06-the-lovers.png
+public/cards/major2/07-the-chariot.png
+public/cards/major2/08-strength.png
+public/cards/major2/09-the-hermit.png
+public/cards/major2/10-wheel-of-fortune.png
+public/cards/major2/11-justice.png
+public/cards/major2/12-the-hanged-man.png
+public/cards/major2/13-death.png
+public/cards/major2/14-temperance.png
+public/cards/major2/15-the-devil.png
+public/cards/major2/16-the/cards/major2/08-strength.png
+public/cards/major2/09-the-hermit.png
+public/cards/major2/10-wheel-of-fortune.png
+public/cards/major2/11-justice.png
+public/cards/major2/12-the-hanged-man.png
+public/cards/major2/13-death.png
+public/cards/major2/14-temperance.png
+public/cards/major2/15-the-devil.png
+public/cards/major2/16-the-tower.png
+public/cards/major2/17-the-star.png
+public/cards/major2/18-the-moon.png
+public/cards/major2/19-the-sun.png
+public/cards/major2/20-judgement.png
+public/cards/major2/21-the-world.png
+
+Code
+
+
+Copy
+
+If any file is missing, report which ones. Do NOT create placeholder images.
+
+---
+
+### STEP 5-tower.png
+public/cards/major2/17-the-star.png
+public/cards/major2/18-the-moon.png
+public/cards/major2/19-the-sun.png
+public/cards/major2/20-judgement.png
+public/cards/major2/21-the-world.png
+If any file is missing, report: PRESERVE EXISTING FUNCTIONALITY
+
+Critical rules:
+
+Do NOT delete or overwrite any existing card image directories (e.g., major/, major1/, `minor which ones. Do NOT create placeholder images.
+
+STEP 5: PRESERVE EXISTING FUNCTIONALITY
+Critical rules:
+
+Do NOT delete or overwrite any existing card image directories (e.g., major/, major1/, minor/).
+
+Do NOT break the authentication system, subscription flow, or any other feature.
+
+Do NOT change the app's routing structure.
+
+Do NOT modify the Seraphine character/`).
+
+Do NOT break the authentication system, subscription flow, or any other feature.
+
+Do NOT change the app's routing structure.
+
+Do NOT modify the Seraphine character portrait at /art/seraphine/portrait.png.
+
+If there are Minor Arcana cards already in the system, leave them untouched. portrait at /art/seraphine/portrait.png.
+
+If there are Minor Arcana cards already in the system, leave them untouched.
+
+If there's an existing major/ or major1/ directory being used, update references to point to major2/ instead — but keep the old directories
+
+If there's an existing major/ or major1/ directory being used, update references to point to major2/ instead — but keep the old directories intact as backups.
+
+STEP 6: TESTING CHECKLIST
+After all changes, confirm:
+
+[ ] All 22 card images render on the Deck Vault page (/deck)
+
+[ ] Cards display in correct order (0–21)
+
+[ ] Card intact as backups.
+
+STEP 6: TESTING CHECKLIST
+After all changes, confirm:
+
+[ ] All 22 card images render on the Deck Vault page (/deck)
+
+[ ] Cards display in correct order (0–21)
+
+[ ] Card names match the images (The Fool = 00-the-fool.png, etc.)
+
+[ ] Oracle reading pulls and displays cards with correct images
+
+[ ] Card of the Day shows the correct image
+
+[ ] No names match the images (The Fool = 00-the-fool.png, etc.)
+
+[ ] Oracle reading pulls and displays cards with correct images
+
+[ ] Card of the Day shows the correct image
+
+[ ] No broken image icons anywhere
+
+[ ] No console errors related to missing assets or failed imports
+
+[ ] Reversed card broken image icons anywhere
+
+[ ] No console errors related to missing assets or failed imports
+
+[ ] Reversed card display still works if applicable
+
+[ ] App still builds and runs without errors
+
+[ ] Login and authentication still work
+
+[ ] All navigation routes still function
+
+SUMMARY display still works if applicable
+[ ] App still builds and runs without errors
+
+[ ] Login and authentication still work
+
+[ ] All navigation routes still function
+
+SUMMARY OF WHAT YOU'RE DOING:
+Discover the codebase structure and how cards are currently handled
+
+Update the card data layer to use public/cards/major2/ images with exact filenames
+
+Add OF WHAT YOU'RE DOING:
+
+Discover the codebase structure and how cards are currently handled
+
+Update the card data layer to use public/cards/major2/ images with exact filenames
+
+Add upright and reversed keywords for all 22 cards
+
+Ensure all card-rendering views display the new images
+
+Verify all 22 images load correctly
+
+Preserve all existing functionality
+
+Run through the testing checklist
+
+**Do not skip the discovery upright and reversed keywords for all 22 cards
+
+Ensure all card-rendering views display the new images
+
+Verify all 22 images load correctly
+
+Preserve all existing functionality
+
+Run through the testing checklist
+
+Do not skip the discovery step. The integration approach depends entirely on how the app is currently structured.
