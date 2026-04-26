@@ -1,0 +1,127 @@
+Task: Fix Duplicate Card Entries, Hide Incomplete Suits, Verify Active Cards
+CURRENT STATE OF THE DECK
+The deck currently has the following image status:
+
+COMPLETE — display these:
+
+Major Arcana (22 cards, 0–21) — all images loaded in public/cards/major2/
+
+Wands (14 cards, Ace through King) — all images loaded
+
+Cups (14 cards, Ace through King) — all images loaded
+
+Ace of Swords — image loaded
+
+Ace of Pentacles — image loaded
+
+INCOMPLETE — hide these from the site:
+
+Swords (Two through King — 13 cards) — NO images yet
+
+Pentacles (Two through King — 13 cards) — NO images yet
+
+STEP 1: FIX DUPLICATE CARD ENTRIES (CRITICAL)
+Every Minor Arcana card currently appears TWICE in the deck data and UI (e.g., "Two of Cups, Two of Cups, Three of Cups, Three of Cups…"). This is a data layer bug — the card entries are duplicated in the source.
+
+Find the card data source — search the entire codebase for arrays, objects, JSON files, or database seeds containing card names like "Ace of Wands", "Two of Cups", etc.
+
+Deduplicate — ensure each card name appears exactly ONCE in the data. Remove the duplicate entry for every card.
+
+If there are multiple data source files that each define the same cards, consolidate to a single source of truth.
+
+STEP 2: HIDE SWORDS & PENTACLES (Two through King) FROM ALL UI
+Cards without images must NOT appear anywhere on the site. Specifically, hide Swords Two through King of Swords AND Pentacles Two through King of Pentacles. The Ace of Swords and Ace of Pentacles DO have images and SHOULD still appear.
+
+Implementation approach — choose whichever fits the codebase best:
+
+Option A: Add an enabled or active flag to each card in the data source.
+
+Set enabled: true for all Major Arcana, all Wands, all Cups, Ace of Swords, and Ace of Pentacles.
+
+Set enabled: false for Swords Two through King and Pentacles Two through King.
+
+Filter all card-rendering logic (Vault grid, Oracle draw, Card of the Day, Readings) to only include cards where enabled === true.
+
+This is the PREFERRED approach because it makes re-enabling easy when images are added later.
+
+Option B: Conditionally filter by image existence.
+
+Before rendering or drawing a card, check if the image file exists or if the image path is set.
+
+Only display cards that have a valid, non-null, non-placeholder image path.
+
+Option C: Remove from data source temporarily.
+
+Comment out or remove Swords Two–King and Pentacles Two–King from the card data entirely.
+
+Add a code comment like // TODO: Re-enable when Swords/Pentacles images are loaded so they can be restored later.
+
+Whichever option you choose, make sure:
+
+The Ace of Swords and Ace of Pentacles STILL SHOW (they have images)
+
+These hidden cards cannot be drawn in Oracle readings or Card of the Day
+
+These hidden cards do not appear in the Deck Vault grid
+
+No broken image placeholders or empty card slots appear anywhere
+
+STEP 3: VERIFY ACTIVE DECK
+After changes, the active deck should contain exactly 52 cards:
+
+22 Major Arcana (The Fool through The World)
+
+14 Wands (Ace through King)
+
+14 Cups (Ace through King)
+
+1 Ace of Swords
+
+1 Ace of Pentacles
+
+Verification checklist:
+
+[ ] No card name appears more than once in the Vault/deck view
+
+[ ] Vault displays exactly 52 cards, no more, no fewer
+
+[ ] All 52 cards render their correct image with no broken images
+
+[ ] Cards are sorted logically: Major Arcana first (0–21), then Wands (Ace–King), then Cups (Ace–King), then Ace of Swords, then Ace of Pentacles
+
+[ ] Oracle reading only draws from the 52 active cards
+
+[ ] Card of the Day only draws from the 52 active cards
+
+[ ] No Swords (Two–King) or Pentacles (Two–King) appear anywhere on the site
+
+[ ] No console errors related to missing images
+
+[ ] Login, navigation, and all other features still work
+
+[ ] The app builds and runs without errors
+
+STEP 4: ADD REACTIVATION NOTE
+Wherever you implement the hide logic, add a clear developer comment explaining:
+
+Code
+
+
+Copy
+// HIDDEN SUITS: Swords (Two-King) and Pentacles (Two-King) are hidden
+// because their card images have not been generated yet.
+// To re-enable: set enabled: true (Option A), add image paths (Option B),
+// or uncomment entries (Option C) once images are loaded into the
+// appropriate public/cards/ directory.
+WHAT NOT TO DO
+Do NOT delete any image files from any cards directory
+
+Do NOT change Major Arcana, Wands, or Cups data — they are correct and working
+
+Do NOT modify authentication, subscription, or routing
+
+Do NOT change the Seraphine character portrait or any non-card UI assets
+
+Do NOT create placeholder images for Swords/Pentacles
+
+Do NOT change the image paths for any cards that currently have working images
